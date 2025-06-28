@@ -35,11 +35,13 @@ export default function Profile() {
   // Mutation to update excluded countries
   const updateExcludedMutation = useMutation({
     mutationFn: async (newExcludedCountries: string[]) => {
-      return apiRequest("/api/user/excluded-countries", {
+      const response = await fetch("/api/user/excluded-countries", {
         method: "PATCH",
         body: JSON.stringify({ excludedCountries: newExcludedCountries }),
         headers: { "Content-Type": "application/json" },
       });
+      if (!response.ok) throw new Error("Failed to update excluded countries");
+      return response.json();
     },
     onSuccess: () => {
       toast({

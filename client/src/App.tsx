@@ -9,6 +9,7 @@ import Quiz from "@/pages/quiz";
 import Flashcards from "@/pages/flashcards";
 import TypingPractice from "@/pages/typing-practice";
 import MapChallenge from "@/pages/map-challenge";
+import Profile from "@/pages/profile";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/flashcards" component={Flashcards} />
       <Route path="/typing-practice" component={TypingPractice} />
       <Route path="/map-challenge" component={MapChallenge} />
+      <Route path="/profile" component={Profile} />
       <Route component={NotFound} />
     </Switch>
   );

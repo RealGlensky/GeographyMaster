@@ -26,14 +26,14 @@ export function Navbar() {
               <span>{user?.currentStreak || 0} day streak</span>
             </div>
             
-            <div className="flex items-center space-x-2">
+            <Link href="/profile" className="flex items-center space-x-2 hover:bg-gray-50 px-3 py-2 rounded-md transition-colors">
               <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
                 <User className="w-4 h-4 text-gray-600" />
               </div>
               <span className="text-sm font-medium text-gray-700">
                 {user?.username || "User"}
               </span>
-            </div>
+            </Link>
           </div>
         </div>
       </div>

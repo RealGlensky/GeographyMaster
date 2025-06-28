@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { QuizQuestion, Country, StudyMode, Difficulty } from "@shared/schema";
+import { QuizQuestion, Country, StudyMode, Difficulty, User } from "@shared/schema";
 import { countries, getCountriesByDifficulty } from "@/data/countries";
 import { generateQuizOptions, shuffleArray } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
@@ -27,6 +27,11 @@ interface UseQuizOptions {
 
 export function useQuiz({ mode, difficulty, questionCount = 10, timePerQuestion = 30 }: UseQuizOptions) {
   const queryClient = useQueryClient();
+  
+  // Get user data for excluded countries
+  const { data: user } = useQuery<User>({
+    queryKey: ["/api/user"],
+  });
   
   const [quizState, setQuizState] = useState<QuizState>({
     sessionId: null,
