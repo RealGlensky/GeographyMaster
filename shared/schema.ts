@@ -98,7 +98,7 @@ export type Country = {
   name: string;
   capital: string;
   continent: string;
-  difficulty: 'beginner' | 'intermediate' | 'expert';
+  difficulty: 'beginner' | 'easy' | 'intermediate' | 'advanced' | 'expert';
 };
 
 export type QuizQuestion = {
@@ -111,4 +111,4 @@ export type QuizQuestion = {
 };
 
 export type StudyMode = 'quiz' | 'flashcards' | 'typing' | 'map';
-export type Difficulty = 'beginner' | 'intermediate' | 'expert';
+export type Difficulty = 'beginner' | 'easy' | 'intermediate' | 'advanced' | 'expert';
