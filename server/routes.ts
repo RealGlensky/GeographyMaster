@@ -58,6 +58,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update excluded countries
+  app.patch("/api/user/excluded-countries", async (req, res) => {
+    try {
+      const { excludedCountries } = req.body;
+      if (!Array.isArray(excludedCountries) || !excludedCountries.every(code => typeof code === 'string')) {
+        return res.status(400).json({ message: "excludedCountries must be an array of strings" });
+      }
+      await storage.updateExcludedCountries(1, excludedCountries);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update excluded countries" });
+    }
+  });
+
   // Create quiz session
   app.post("/api/quiz/start", async (req, res) => {
     try {

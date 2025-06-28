@@ -8,6 +8,7 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   currentStreak: integer("current_streak").default(0),
   totalStudyTime: integer("total_study_time").default(0), // in minutes
+  excludedCountries: text("excluded_countries").array().default([]), // array of country codes to exclude from practice
   createdAt: timestamp("created_at").defaultNow(),
 });
 

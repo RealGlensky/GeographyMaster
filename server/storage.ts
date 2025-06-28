@@ -12,6 +12,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUserStreak(userId: number, streak: number): Promise<void>;
   updateStudyTime(userId: number, minutes: number): Promise<void>;
+  updateExcludedCountries(userId: number, excludedCountries: string[]): Promise<void>;
 
   // Progress methods
   getUserProgress(userId: number): Promise<UserProgress[]>;
@@ -74,6 +75,7 @@ export class MemStorage implements IStorage {
       id,
       currentStreak: 7,
       totalStudyTime: 720, // 12 hours in minutes
+      excludedCountries: insertUser.excludedCountries || [],
       createdAt: new Date(),
     };
     this.users.set(id, user);
@@ -101,6 +103,14 @@ export class MemStorage implements IStorage {
     const user = this.users.get(userId);
     if (user) {
       user.totalStudyTime = (user.totalStudyTime || 0) + minutes;
+      this.users.set(userId, user);
+    }
+  }
+
+  async updateExcludedCountries(userId: number, excludedCountries: string[]): Promise<void> {
+    const user = this.users.get(userId);
+    if (user) {
+      user.excludedCountries = excludedCountries;
       this.users.set(userId, user);
     }
   }
