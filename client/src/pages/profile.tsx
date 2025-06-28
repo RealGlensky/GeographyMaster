@@ -92,8 +92,26 @@ export default function Profile() {
   // Group countries by difficulty
   const groupedCountries = {
     beginner: filteredCountries.filter(c => c.difficulty === "beginner"),
+    easy: filteredCountries.filter(c => c.difficulty === "easy"),
     intermediate: filteredCountries.filter(c => c.difficulty === "intermediate"),
+    advanced: filteredCountries.filter(c => c.difficulty === "advanced"),
     expert: filteredCountries.filter(c => c.difficulty === "expert"),
+  };
+
+  // Select all countries in a specific difficulty level
+  const handleSelectAllInLevel = (level: keyof typeof groupedCountries) => {
+    const levelCountries = groupedCountries[level].map(c => c.code);
+    const newExcluded = Array.from(new Set([...excludedCountries, ...levelCountries]));
+    setExcludedCountries(newExcluded);
+    setHasChanges(true);
+  };
+
+  // Deselect all countries in a specific difficulty level
+  const handleDeselectAllInLevel = (level: keyof typeof groupedCountries) => {
+    const levelCountries = groupedCountries[level].map(c => c.code);
+    const newExcluded = excludedCountries.filter(code => !levelCountries.includes(code));
+    setExcludedCountries(newExcluded);
+    setHasChanges(true);
   };
 
   if (userLoading) {
@@ -189,12 +207,32 @@ export default function Profile() {
             {/* Countries List */}
             <ScrollArea className="h-96 border rounded-lg">
               <div className="p-4 space-y-6">
-                {Object.entries(groupedCountries).map(([difficulty, countryList]) => (
+                {Object.entries(groupedCountries).map(([difficulty, countryList]) => {
+                  const levelKey = difficulty as keyof typeof groupedCountries;
+                  const selectedInLevel = countryList.filter(c => excludedCountries.includes(c.code)).length;
+                  const allSelected = selectedInLevel === countryList.length;
+                  
+                  return (
                   <div key={difficulty}>
-                    <h3 className="font-semibold text-lg mb-3 capitalize flex items-center gap-2">
-                      {difficulty} Level
-                      <Badge variant="secondary">{countryList.length} countries</Badge>
-                    </h3>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-semibold text-lg capitalize flex items-center gap-2">
+                        {difficulty} Level
+                        <Badge variant="secondary">{countryList.length} countries</Badge>
+                        {selectedInLevel > 0 && (
+                          <Badge variant="outline">{selectedInLevel} excluded</Badge>
+                        )}
+                      </h3>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => allSelected ? handleDeselectAllInLevel(levelKey) : handleSelectAllInLevel(levelKey)}
+                          disabled={countryList.length === 0}
+                        >
+                          {allSelected ? "Deselect All" : "Select All"}
+                        </Button>
+                      </div>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       {countryList.map((country) => (
                         <div
@@ -218,7 +256,8 @@ export default function Profile() {
                     </div>
                     {difficulty !== "expert" && <Separator className="mt-4" />}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </ScrollArea>
 

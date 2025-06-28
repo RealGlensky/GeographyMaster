@@ -228,7 +228,7 @@ export const countries: Country[] = [
   { code: "YE", name: "Yemen", capital: "Sana'a", continent: "Asia", difficulty: "expert" },
 ];
 
-export const getCountriesByDifficulty = (difficulty: "beginner" | "intermediate" | "expert", excludedCountries: string[] = []) => {
+export const getCountriesByDifficulty = (difficulty: "beginner" | "easy" | "intermediate" | "advanced" | "expert", excludedCountries: string[] = []) => {
   return countries.filter(country => 
     country.difficulty === difficulty && !excludedCountries.includes(country.code)
   );
@@ -238,7 +238,7 @@ export const getCountryByCode = (code: string) => {
   return countries.find(country => country.code === code);
 };
 
-export const getRandomCountries = (count: number, difficulty?: "beginner" | "intermediate" | "expert", excludedCountries: string[] = []) => {
+export const getRandomCountries = (count: number, difficulty?: "beginner" | "easy" | "intermediate" | "advanced" | "expert", excludedCountries: string[] = []) => {
   const filteredCountries = difficulty 
     ? getCountriesByDifficulty(difficulty, excludedCountries) 
     : countries.filter(country => !excludedCountries.includes(country.code));
