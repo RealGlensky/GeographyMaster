@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { X, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
-import { Difficulty, Country } from "@shared/schema";
+import { Difficulty, Country, User } from "@shared/schema";
 import { getCountriesByDifficulty } from "@/data/countries";
 
 interface FlashcardData {
@@ -17,19 +18,36 @@ export default function Flashcards() {
   const [urlParams] = useState(() => new URLSearchParams(window.location.search));
   const difficulty = (urlParams.get("difficulty") || "beginner") as Difficulty;
   
-  const [countries] = useState(() => getCountriesByDifficulty(difficulty));
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [flashcard, setFlashcard] = useState<FlashcardData>({
-    country: countries[0],
-    showAnswer: false,
+  // Get user data for excluded countries
+  const { data: user } = useQuery<User>({
+    queryKey: ["/api/user"],
   });
+  
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [flashcard, setFlashcard] = useState<FlashcardData | null>(null);
   const [studiedCards, setStudiedCards] = useState(new Set<number>());
 
+  // Update countries when user data loads
   useEffect(() => {
-    setFlashcard({
-      country: countries[currentIndex],
-      showAnswer: false,
-    });
+    const excludedCountries = user?.excludedCountries || [];
+    const availableCountries = getCountriesByDifficulty(difficulty, excludedCountries);
+    setCountries(availableCountries);
+    if (availableCountries.length > 0) {
+      setFlashcard({
+        country: availableCountries[0],
+        showAnswer: false,
+      });
+    }
+  }, [user, difficulty]);
+
+  useEffect(() => {
+    if (countries.length > 0 && countries[currentIndex]) {
+      setFlashcard({
+        country: countries[currentIndex],
+        showAnswer: false,
+      });
+    }
   }, [currentIndex, countries]);
 
   const handleClose = () => {
@@ -37,8 +55,9 @@ export default function Flashcards() {
   };
 
   const flipCard = () => {
-    setFlashcard(prev => ({ ...prev, showAnswer: !prev.showAnswer }));
-    if (!flashcard.showAnswer) {
+    if (!flashcard) return;
+    setFlashcard(prev => prev ? { ...prev, showAnswer: !prev.showAnswer } : null);
+    if (flashcard && !flashcard.showAnswer) {
       setStudiedCards(prev => new Set(prev).add(currentIndex));
     }
   };
@@ -65,6 +84,26 @@ export default function Flashcards() {
   };
 
   const studiedPercentage = (studiedCards.size / countries.length) * 100;
+
+  // Show loading or empty state
+  if (!flashcard || countries.length === 0) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">
+            {countries.length === 0 ? "No countries available" : "Loading..."}
+          </h2>
+          <p className="text-gray-600 mb-4">
+            {countries.length === 0 
+              ? "All countries for this difficulty level have been excluded from your learning plan." 
+              : "Setting up your flashcards..."
+            }
+          </p>
+          <Button onClick={handleClose}>Return to Dashboard</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">

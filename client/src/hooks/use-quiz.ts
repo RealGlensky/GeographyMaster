@@ -88,7 +88,8 @@ export function useQuiz({ mode, difficulty, questionCount = 10, timePerQuestion 
       return await response.json();
     },
     onSuccess: (session) => {
-      const availableCountries = getCountriesByDifficulty(difficulty);
+      const excludedCountries = user?.excludedCountries || [];
+      const availableCountries = getCountriesByDifficulty(difficulty, excludedCountries);
       const questions = generateQuestions(availableCountries);
       
       setQuizState(prev => ({
