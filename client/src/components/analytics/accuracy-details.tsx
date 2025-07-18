@@ -1,16 +1,51 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Target, TrendingDown, BookOpen, Brain } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Target, TrendingDown, BookOpen, Brain, ArrowLeft, ChevronRight } from "lucide-react";
 import { CountryFlag } from "@/components/country-flag";
 import { PronunciationButton } from "@/components/pronunciation-button";
 import { countries } from "@/data/countries";
 
+// Difficulty color mapping to match the difficulty selector
+const difficultyColors = {
+  beginner: "bg-green-100 text-green-600",
+  easy: "bg-blue-100 text-blue-600", 
+  intermediate: "bg-yellow-100 text-yellow-600",
+  advanced: "bg-orange-100 text-orange-600",
+  expert: "bg-red-100 text-red-600",
+};
+
+const difficultyLabels = {
+  beginner: "Beginner",
+  easy: "Easy",
+  intermediate: "Intermediate", 
+  advanced: "Advanced",
+  expert: "Expert",
+};
+
+// All difficulty levels to ensure complete coverage
+const allDifficultyLevels = ['beginner', 'easy', 'intermediate', 'advanced', 'expert'];
+
 export function AccuracyDetails() {
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(null);
+  
   const { data: accuracyData, isLoading } = useQuery({
     queryKey: ["/api/user/accuracy-details"],
+  });
+
+  const { data: difficultyDetails, isLoading: isLoadingDetails } = useQuery({
+    queryKey: ["/api/user/accuracy-details", selectedDifficulty],
+    queryFn: async () => {
+      if (!selectedDifficulty) return null;
+      const response = await fetch(`/api/user/accuracy-details?difficulty=${selectedDifficulty}`);
+      if (!response.ok) throw new Error('Failed to fetch difficulty details');
+      return response.json();
+    },
+    enabled: !!selectedDifficulty
   });
 
   if (isLoading) {
@@ -29,6 +64,67 @@ export function AccuracyDetails() {
   }
 
   const { byDifficulty = [], byStudyMode = [], worstCountries = [] } = accuracyData || {};
+
+  // Ensure all difficulty levels are represented
+  const completeDifficultyData = allDifficultyLevels.map(level => {
+    const existing = byDifficulty.find(item => item.difficulty === level);
+    return existing || {
+      difficulty: level,
+      accuracy: 0,
+      totalQuestions: 0,
+      correctAnswers: 0
+    };
+  });
+
+  // Show detailed view if a difficulty is selected
+  if (selectedDifficulty) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            onClick={() => setSelectedDifficulty(null)}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Overview
+          </Button>
+          <div className="flex items-center gap-2">
+            <Badge className={difficultyColors[selectedDifficulty as keyof typeof difficultyColors]}>
+              {difficultyLabels[selectedDifficulty as keyof typeof difficultyLabels]}
+            </Badge>
+            <span className="text-lg font-semibold">Detailed Performance</span>
+          </div>
+        </div>
+
+        {isLoadingDetails ? (
+          <Card>
+            <CardContent className="p-8">
+              <div className="animate-pulse space-y-4">
+                <div className="h-4 bg-gray-300 rounded w-1/4"></div>
+                <div className="h-32 bg-gray-300 rounded"></div>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                {difficultyLabels[selectedDifficulty as keyof typeof difficultyLabels]} Level Performance
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8 text-gray-500">
+                Detailed breakdown for {difficultyLabels[selectedDifficulty as keyof typeof difficultyLabels]} level coming soon!
+                <br />
+                This will show individual country performance, question types, and improvement suggestions.
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    );
+  }
 
   const getAccuracyColor = (accuracy: number) => {
     if (accuracy >= 90) return 'text-green-600';
@@ -78,38 +174,41 @@ export function AccuracyDetails() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {byDifficulty.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                No difficulty data available yet. Complete some quizzes to see your accuracy breakdown!
-              </div>
-            ) : (
-              byDifficulty.map((item) => (
-                <div key={item.difficulty} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{getDifficultyIcon(item.difficulty)}</span>
-                    <div>
-                      <div className="font-medium capitalize">{item.difficulty}</div>
-                      <div className="text-sm text-gray-600">
-                        {item.totalQuestions} questions answered
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <div className={`text-2xl font-bold ${getAccuracyColor(item.accuracy)}`}>
-                        {item.accuracy}%
-                      </div>
-                    </div>
-                    <div className="w-32">
-                      <Progress 
-                        value={item.accuracy} 
-                        className="h-3"
-                      />
+            {completeDifficultyData.map((item) => (
+              <button
+                key={item.difficulty}
+                onClick={() => setSelectedDifficulty(item.difficulty)}
+                className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer border-2 border-transparent hover:border-gray-200"
+              >
+                <div className="flex items-center gap-3">
+                  <Badge className={difficultyColors[item.difficulty as keyof typeof difficultyColors]}>
+                    {difficultyLabels[item.difficulty as keyof typeof difficultyLabels]}
+                  </Badge>
+                  <div className="text-left">
+                    <div className="text-sm text-gray-600">
+                      {item.totalQuestions > 0 
+                        ? `${item.totalQuestions} questions answered`
+                        : "No questions answered yet"
+                      }
                     </div>
                   </div>
                 </div>
-              ))
-            )}
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <div className={`text-2xl font-bold ${getAccuracyColor(item.accuracy)}`}>
+                      {item.totalQuestions > 0 ? `${item.accuracy}%` : "—"}
+                    </div>
+                  </div>
+                  <div className="w-32">
+                    <Progress 
+                      value={item.totalQuestions > 0 ? item.accuracy : 0} 
+                      className="h-3"
+                    />
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                </div>
+              </button>
+            ))}
           </div>
         </CardContent>
       </Card>

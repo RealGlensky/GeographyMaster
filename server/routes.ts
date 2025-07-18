@@ -81,7 +81,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get detailed accuracy data
   app.get("/api/user/accuracy-details", async (req, res) => {
     try {
-      const accuracyDetails = await storage.getAccuracyDetails(1);
+      const { difficulty } = req.query;
+      const accuracyDetails = await storage.getAccuracyDetails(1, difficulty as string);
       res.json(accuracyDetails);
     } catch (error) {
       res.status(500).json({ message: "Failed to get accuracy details" });

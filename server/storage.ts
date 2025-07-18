@@ -391,12 +391,13 @@ export class MemStorage implements IStorage {
     return calendarData;
   }
 
-  async getAccuracyDetails(userId: number): Promise<{
+  async getAccuracyDetails(userId: number, difficulty?: string): Promise<{
     byDifficulty: Array<{difficulty: string; accuracy: number; totalQuestions: number}>;
     byStudyMode: Array<{mode: string; accuracy: number; totalQuestions: number}>;
     worstCountries: Array<{countryCode: string; accuracy: number; totalAttempts: number}>;
   }> {
-    const sessions = await this.getUserQuizSessions(userId);
+    const allSessions = await this.getUserQuizSessions(userId);
+    const sessions = difficulty ? allSessions.filter(s => s.difficulty === difficulty) : allSessions;
     const progress = await this.getUserProgress(userId);
     
     // Group by difficulty
@@ -429,9 +430,17 @@ export class MemStorage implements IStorage {
       totalQuestions: data.total
     }));
     
-    // Worst performing countries
-    const worstCountries = progress
-      .filter(p => p.totalAttempts > 0)
+    // Worst performing countries (filter by difficulty-specific sessions if specified)
+    let filteredProgress = progress.filter(p => p.totalAttempts > 0);
+    
+    // If filtering by difficulty, only include countries that were studied in that difficulty
+    if (difficulty) {
+      const difficultySessions = sessions.filter(s => s.difficulty === difficulty);
+      // For now, include all countries since we don't track difficulty per country attempt
+      // This could be enhanced in the future to track country-specific difficulty performance
+    }
+    
+    const worstCountries = filteredProgress
       .map(p => ({
         countryCode: p.countryCode,
         accuracy: Math.round((p.correctAnswers / p.totalAttempts) * 100),
