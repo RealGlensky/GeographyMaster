@@ -204,6 +204,10 @@ export default function Quiz() {
                     buttonClass += " hover:border-primary hover:bg-primary/5";
                   }
 
+                  // Check if this option represents a country (for capital-to-country questions)
+                  const isCountryOption = currentQuestionData?.type === "capital-to-country";
+                  const countryData = isCountryOption ? countries.find(c => c.name === option) : null;
+
                   return (
                     <button
                       key={option}
@@ -212,9 +216,18 @@ export default function Quiz() {
                       onClick={() => handleAnswerSelect(option)}
                       disabled={showResult || isSubmitting}
                     >
-                      <span className={`font-medium ${showResult && isCorrect ? 'text-green-700' : showResult && isSelected && !isCorrect ? 'text-red-700' : 'text-gray-900'}`}>
-                        {option}
-                      </span>
+                      <div className="flex items-center space-x-3">
+                        {isCountryOption && countryData && (
+                          <CountryFlag 
+                            countryCode={countryData.code} 
+                            countryName={countryData.name} 
+                            size="sm"
+                          />
+                        )}
+                        <span className={`font-medium ${showResult && isCorrect ? 'text-green-700' : showResult && isSelected && !isCorrect ? 'text-red-700' : 'text-gray-900'}`}>
+                          {option}
+                        </span>
+                      </div>
                     </button>
                   );
                 })}
