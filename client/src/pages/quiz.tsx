@@ -164,13 +164,29 @@ export default function Quiz() {
               {/* Answer Options */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {currentQuestionData?.options.map((option) => {
+                  let isCorrect = isCorrectAnswer(option);
+                  let isSelected = isSelectedAnswer(option);
+                  
+                  let buttonStyle: React.CSSProperties = {};
                   let buttonClass = "p-4 border-2 border-gray-200 rounded-lg text-left transition-all quiz-option";
                   
                   if (showResult) {
-                    if (isCorrectAnswer(option)) {
-                      buttonClass += " correct";
-                    } else if (isSelectedAnswer(option) && !isCorrectAnswer(option)) {
-                      buttonClass += " incorrect";
+                    if (isCorrect) {
+                      buttonStyle = {
+                        borderColor: '#22c55e',
+                        borderWidth: '3px',
+                        backgroundColor: '#22c55e10',
+                        boxShadow: '0 0 0 2px #22c55e30'
+                      };
+                      buttonClass = "p-4 rounded-lg text-left transition-all quiz-option";
+                    } else if (isSelected && !isCorrect) {
+                      buttonStyle = {
+                        borderColor: '#ef4444',
+                        borderWidth: '3px',
+                        backgroundColor: '#ef444410',
+                        boxShadow: '0 0 0 2px #ef444430'
+                      };
+                      buttonClass = "p-4 rounded-lg text-left transition-all quiz-option";
                     }
                   } else {
                     buttonClass += " hover:border-primary hover:bg-primary/5";
@@ -180,10 +196,13 @@ export default function Quiz() {
                     <button
                       key={option}
                       className={buttonClass}
+                      style={buttonStyle}
                       onClick={() => handleAnswerSelect(option)}
                       disabled={showResult || isSubmitting}
                     >
-                      <span className="font-medium text-gray-900">{option}</span>
+                      <span className={`font-medium ${showResult && isCorrect ? 'text-green-700' : showResult && isSelected && !isCorrect ? 'text-red-700' : 'text-gray-900'}`}>
+                        {option}
+                      </span>
                     </button>
                   );
                 })}
