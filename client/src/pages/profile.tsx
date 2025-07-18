@@ -14,6 +14,7 @@ import { countries } from "@/data/countries";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { User as UserType } from "@shared/schema";
 import { CountryFlag } from "@/components/country-flag";
+import { PronunciationButton } from "@/components/pronunciation-button";
 
 export default function Profile() {
   const { toast } = useToast();
@@ -254,8 +255,24 @@ export default function Profile() {
                             htmlFor={country.code}
                             className="flex-1 cursor-pointer text-sm"
                           >
-                            <span className="font-medium">{country.name}</span>
-                            <span className="text-gray-500 ml-2">→ {country.capital}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{country.name}</span>
+                              <PronunciationButton 
+                                text={country.name}
+                                size="sm"
+                                variant="ghost"
+                                className="h-4 w-4 p-0"
+                              />
+                            </div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-gray-500">→ {country.capital}</span>
+                              <PronunciationButton 
+                                text={country.capital}
+                                size="sm"
+                                variant="ghost"
+                                className="h-4 w-4 p-0"
+                              />
+                            </div>
                           </Label>
                         </div>
                       ))}

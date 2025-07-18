@@ -9,6 +9,7 @@ import { Difficulty, Country } from "@shared/schema";
 import { getCountriesByDifficulty } from "@/data/countries";
 import { isTypingCorrect, formatTime } from "@/lib/utils";
 import { CountryFlag } from "@/components/country-flag";
+import { PronunciationButton } from "@/components/pronunciation-button";
 
 interface TypingQuestion {
   country: Country;
@@ -192,9 +193,18 @@ export default function TypingPractice() {
                   className="mx-auto mb-2"
                 />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                {currentQuestionData.prompt}
-              </h2>
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {currentQuestionData.prompt}
+                </h2>
+                <PronunciationButton 
+                  text={currentQuestionData.type === "country-to-capital" 
+                    ? currentQuestionData.country.name || ''
+                    : currentQuestionData.expectedAnswer || ''
+                  }
+                  size="sm"
+                />
+              </div>
               <Badge variant="outline" className="mb-4">
                 {currentQuestionData.country.continent}
               </Badge>

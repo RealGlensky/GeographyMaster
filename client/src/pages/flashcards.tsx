@@ -8,6 +8,7 @@ import { X, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { Difficulty, Country, User } from "@shared/schema";
 import { getCountriesByDifficulty } from "@/data/countries";
 import { CountryFlag } from "@/components/country-flag";
+import { PronunciationButton } from "@/components/pronunciation-button";
 
 interface FlashcardData {
   country: Country;
@@ -161,9 +162,16 @@ export default function Flashcards() {
                         className="mx-auto mb-2"
                       />
                     </div>
-                    <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                      {flashcard.country?.name}
-                    </h2>
+                    <div className="flex items-center justify-center gap-2 mb-4">
+                      <h2 className="text-3xl font-bold text-gray-900">
+                        {flashcard.country?.name}
+                      </h2>
+                      <PronunciationButton 
+                        text={flashcard.country?.name || ''}
+                        size="md"
+                        className="ml-2"
+                      />
+                    </div>
                     <p className="text-gray-500 mb-6">What is the capital?</p>
                     <p className="text-sm text-gray-400">Click to reveal</p>
                   </div>
@@ -182,12 +190,24 @@ export default function Flashcards() {
                         className="mx-auto mb-2"
                       />
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-600 mb-2">
-                      {flashcard.country?.name}
-                    </h2>
-                    <h3 className="text-3xl font-bold text-gray-900 mb-4">
-                      {flashcard.country?.capital}
-                    </h3>
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <h2 className="text-2xl font-bold text-gray-600">
+                        {flashcard.country?.name}
+                      </h2>
+                      <PronunciationButton 
+                        text={flashcard.country?.name || ''}
+                        size="sm"
+                      />
+                    </div>
+                    <div className="flex items-center justify-center gap-2 mb-4">
+                      <h3 className="text-3xl font-bold text-gray-900">
+                        {flashcard.country?.capital}
+                      </h3>
+                      <PronunciationButton 
+                        text={flashcard.country?.capital || ''}
+                        size="md"
+                      />
+                    </div>
                     <Badge variant="outline" className="mb-4">
                       {flashcard.country?.continent}
                     </Badge>

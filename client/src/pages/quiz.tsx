@@ -9,6 +9,7 @@ import { useQuiz } from "@/hooks/use-quiz";
 import { Difficulty } from "@shared/schema";
 import { formatTime } from "@/lib/utils";
 import { CountryFlag } from "@/components/country-flag";
+import { PronunciationButton } from "@/components/pronunciation-button";
 import { countries } from "@/data/countries";
 
 export default function Quiz() {
@@ -164,12 +165,21 @@ export default function Quiz() {
                     />
                   )}
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                  {currentQuestionData?.type === "country-to-capital"
-                    ? `What is the capital of ${currentQuestionData.country}?`
-                    : `Which country has ${currentQuestionData?.capital} as its capital?`
-                  }
-                </h3>
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <h3 className="text-2xl font-bold text-gray-900">
+                    {currentQuestionData?.type === "country-to-capital"
+                      ? `What is the capital of ${currentQuestionData.country}?`
+                      : `Which country has ${currentQuestionData?.capital} as its capital?`
+                    }
+                  </h3>
+                  <PronunciationButton 
+                    text={currentQuestionData?.type === "country-to-capital" 
+                      ? currentQuestionData.country || ''
+                      : currentQuestionData?.capital || ''
+                    }
+                    size="sm"
+                  />
+                </div>
                 <p className="text-gray-600">Select the correct answer</p>
               </div>
 
