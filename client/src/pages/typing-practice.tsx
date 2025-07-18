@@ -8,6 +8,7 @@ import { X, CheckCircle, XCircle, Clock } from "lucide-react";
 import { Difficulty, Country } from "@shared/schema";
 import { getCountriesByDifficulty } from "@/data/countries";
 import { isTypingCorrect, formatTime } from "@/lib/utils";
+import { CountryFlag } from "@/components/country-flag";
 
 interface TypingQuestion {
   country: Country;
@@ -183,6 +184,14 @@ export default function TypingPractice() {
           <CardContent className="p-8">
             {/* Question */}
             <div className="text-center mb-8">
+              <div className="mb-4">
+                <CountryFlag 
+                  countryCode={currentQuestionData.country.code} 
+                  countryName={currentQuestionData.country.name} 
+                  size="lg"
+                  className="mx-auto mb-2"
+                />
+              </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
                 {currentQuestionData.prompt}
               </h2>

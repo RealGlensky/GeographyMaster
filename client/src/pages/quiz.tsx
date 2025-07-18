@@ -8,6 +8,8 @@ import { X, Clock, CheckCircle, XCircle } from "lucide-react";
 import { useQuiz } from "@/hooks/use-quiz";
 import { Difficulty } from "@shared/schema";
 import { formatTime } from "@/lib/utils";
+import { CountryFlag } from "@/components/country-flag";
+import { countries } from "@/data/countries";
 
 export default function Quiz() {
   const [, setLocation] = useLocation();
@@ -152,6 +154,16 @@ export default function Quiz() {
             <div className="p-6 space-y-6">
               {/* Question */}
               <div className="text-center">
+                <div className="mb-4">
+                  {currentQuestionData?.type === "country-to-capital" && (
+                    <CountryFlag 
+                      countryCode={countries.find(c => c.name === currentQuestionData.country)?.code || ''} 
+                      countryName={currentQuestionData.country || ''} 
+                      size="lg"
+                      className="mx-auto mb-2"
+                    />
+                  )}
+                </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">
                   {currentQuestionData?.type === "country-to-capital"
                     ? `What is the capital of ${currentQuestionData.country}?`

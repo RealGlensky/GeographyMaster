@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { X, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { Difficulty, Country, User } from "@shared/schema";
 import { getCountriesByDifficulty } from "@/data/countries";
+import { CountryFlag } from "@/components/country-flag";
 
 interface FlashcardData {
   country: Country;
@@ -152,10 +153,13 @@ export default function Flashcards() {
               <Card className="flip-card-front cursor-pointer" onClick={flipCard}>
                 <CardContent className="h-80 flex flex-col items-center justify-center p-8">
                   <div className="text-center">
-                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <span className="text-2xl font-bold text-primary">
-                        {flashcard.country?.name.charAt(0)}
-                      </span>
+                    <div className="mb-4">
+                      <CountryFlag 
+                        countryCode={flashcard.country?.code || ''} 
+                        countryName={flashcard.country?.name || ''} 
+                        size="lg"
+                        className="mx-auto mb-2"
+                      />
                     </div>
                     <h2 className="text-3xl font-bold text-gray-900 mb-4">
                       {flashcard.country?.name}
@@ -170,8 +174,13 @@ export default function Flashcards() {
               <Card className="flip-card-back cursor-pointer" onClick={flipCard}>
                 <CardContent className="h-80 flex flex-col items-center justify-center p-8">
                   <div className="text-center">
-                    <div className="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <span className="text-2xl font-bold text-secondary">★</span>
+                    <div className="mb-4">
+                      <CountryFlag 
+                        countryCode={flashcard.country?.code || ''} 
+                        countryName={flashcard.country?.name || ''} 
+                        size="lg"
+                        className="mx-auto mb-2"
+                      />
                     </div>
                     <h2 className="text-2xl font-bold text-gray-600 mb-2">
                       {flashcard.country?.name}

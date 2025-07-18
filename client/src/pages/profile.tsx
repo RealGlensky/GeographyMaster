@@ -13,6 +13,7 @@ import { Settings, User, Globe, Filter } from "lucide-react";
 import { countries } from "@/data/countries";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { User as UserType } from "@shared/schema";
+import { CountryFlag } from "@/components/country-flag";
 
 export default function Profile() {
   const { toast } = useToast();
@@ -243,6 +244,11 @@ export default function Profile() {
                             id={country.code}
                             checked={excludedCountries.includes(country.code)}
                             onCheckedChange={() => handleCountryToggle(country.code)}
+                          />
+                          <CountryFlag 
+                            countryCode={country.code} 
+                            countryName={country.name} 
+                            size="sm"
                           />
                           <Label
                             htmlFor={country.code}
