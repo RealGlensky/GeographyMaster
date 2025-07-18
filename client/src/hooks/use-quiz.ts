@@ -121,7 +121,6 @@ export function useQuiz({ mode, difficulty, questionCount = 10, timePerQuestion 
       setQuizState(prev => ({
         ...prev,
         score: isCorrect ? prev.score + 1 : prev.score,
-        selectedAnswer: quizState.currentQuestionData?.correctAnswer || null,
         showResult: true,
       }));
 
@@ -159,6 +158,12 @@ export function useQuiz({ mode, difficulty, questionCount = 10, timePerQuestion 
 
   const submitAnswer = useCallback((answer: string) => {
     if (quizState.showResult || !quizState.currentQuestionData) return;
+    
+    // Store the user's selected answer immediately
+    setQuizState(prev => ({
+      ...prev,
+      selectedAnswer: answer,
+    }));
     
     const currentCountry = countries.find(c => 
       c.name === quizState.currentQuestionData?.country || 

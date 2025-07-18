@@ -168,9 +168,9 @@ export default function Quiz() {
                   
                   if (showResult) {
                     if (isCorrectAnswer(option)) {
-                      buttonClass += " quiz-option correct";
+                      buttonClass += " correct";
                     } else if (isSelectedAnswer(option) && !isCorrectAnswer(option)) {
-                      buttonClass += " quiz-option incorrect";
+                      buttonClass += " incorrect";
                     }
                   } else {
                     buttonClass += " hover:border-primary hover:bg-primary/5";
