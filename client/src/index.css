@@ -25,8 +25,8 @@
   --radius: 0.5rem;
   
   /* Custom colors for the app */
-  --success: hsl(123, 43%, 49%);
-  --error: hsl(4, 86%, 58%);
+  --success: hsl(142, 71%, 45%);
+  --error: hsl(0, 84%, 60%);
 }
 
 .dark {
@@ -111,14 +111,20 @@
 
 .quiz-option.correct {
   background-color: hsl(var(--success) / 0.1);
-  border-color: hsl(var(--success));
+  border-color: hsl(var(--success)) !important;
+  border-width: 3px !important;
   color: hsl(var(--success));
+  transform: none !important;
+  box-shadow: 0 0 0 2px hsl(var(--success) / 0.3) !important;
 }
 
 .quiz-option.incorrect {
   background-color: hsl(var(--error) / 0.1);
-  border-color: hsl(var(--error));
+  border-color: hsl(var(--error)) !important;
+  border-width: 3px !important;
   color: hsl(var(--error));
+  transform: none !important;
+  box-shadow: 0 0 0 2px hsl(var(--error) / 0.3) !important;
 }
 
 /* Map hover effects */
