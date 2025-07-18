@@ -58,6 +58,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get detailed mastery data for dashboard
+  app.get("/api/user/mastery-details", async (req, res) => {
+    try {
+      const masteryDetails = await storage.getMasteryDetails(1);
+      res.json(masteryDetails);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get mastery details" });
+    }
+  });
+
+  // Get streak calendar data
+  app.get("/api/user/streak-calendar", async (req, res) => {
+    try {
+      const streakData = await storage.getStreakCalendar(1);
+      res.json(streakData);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get streak calendar" });
+    }
+  });
+
+  // Get detailed accuracy data
+  app.get("/api/user/accuracy-details", async (req, res) => {
+    try {
+      const accuracyDetails = await storage.getAccuracyDetails(1);
+      res.json(accuracyDetails);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get accuracy details" });
+    }
+  });
+
+  // Get study time breakdown
+  app.get("/api/user/study-time-breakdown", async (req, res) => {
+    try {
+      const { period } = req.query;
+      const timePeriod = period as string || 'daily';
+      const timeBreakdown = await storage.getStudyTimeBreakdown(1, timePeriod);
+      res.json(timeBreakdown);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get study time breakdown" });
+    }
+  });
+
   // Update excluded countries
   app.patch("/api/user/excluded-countries", async (req, res) => {
     try {

@@ -117,3 +117,4 @@ Preferred communication style: Simple, everyday language.
 
 Changelog:
 - June 27, 2025. Initial setup
+- July 18, 2025. Added comprehensive analytics dashboard system with clickable progress stats, detailed mastery tracking with blurred capitals for unmastered countries, streak calendar visualization, accuracy breakdown by difficulty and study mode, and Apple Screen Time-style study time analytics

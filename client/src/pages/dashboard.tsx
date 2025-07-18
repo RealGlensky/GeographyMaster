@@ -55,6 +55,10 @@ export default function Dashboard() {
     setLocation(`/${mode}?difficulty=${selectedDifficulty}`);
   };
 
+  const navigateToAnalytics = (view: string) => {
+    setLocation(`/analytics-dashboard?view=${view}`);
+  };
+
   const progressPercentage = ((dailyStats?.countriesLearned || 0) / 5) * 100;
 
   return (
@@ -65,36 +69,40 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <ProgressCard
             title="Countries Mastered"
-            value={stats?.totalCountriesMastered || 47}
+            value={stats?.totalCountriesMastered || 0}
             subtitle="of 195 total"
             icon={CheckCircle}
             iconColor="text-secondary"
+            onClick={() => navigateToAnalytics('mastery')}
           />
           
           <ProgressCard
             title="Current Streak"
-            value={stats?.currentStreak || 7}
+            value={stats?.currentStreak || 0}
             subtitle="days active"
             icon={Flame}
             iconColor="text-accent"
             valueColor="text-accent"
+            onClick={() => navigateToAnalytics('streak')}
           />
           
           <ProgressCard
             title="Accuracy Rate"
-            value={`${stats?.accuracyRate || 84}%`}
+            value={`${stats?.accuracyRate || 0}%`}
             subtitle="last 30 days"
             icon={BarChart3}
             iconColor="text-primary"
             valueColor="text-primary"
+            onClick={() => navigateToAnalytics('accuracy')}
           />
           
           <ProgressCard
             title="Total Study Time"
-            value={formatStudyTime(stats?.totalStudyTime || 720)}
+            value={formatStudyTime(stats?.totalStudyTime || 0)}
             subtitle="this month"
             icon={Clock}
             iconColor="text-purple-600"
+            onClick={() => navigateToAnalytics('study-time')}
           />
         </div>
       </div>

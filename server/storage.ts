@@ -38,6 +38,22 @@ export interface IStorage {
     totalStudyTime: number;
     currentStreak: number;
   }>;
+
+  // Detailed analytics methods
+  getMasteryDetails(userId: number): Promise<{
+    masteredCountries: Array<{countryCode: string; masteryLevel: number; correctAnswers: number; totalAttempts: number}>;
+    unmasteredCountries: Array<{countryCode: string; masteryLevel: number; correctAnswers: number; totalAttempts: number}>;
+  }>;
+  
+  getStreakCalendar(userId: number): Promise<Array<{date: string; hasActivity: boolean; studyTime: number}>>;
+  
+  getAccuracyDetails(userId: number): Promise<{
+    byDifficulty: Array<{difficulty: string; accuracy: number; totalQuestions: number}>;
+    byStudyMode: Array<{mode: string; accuracy: number; totalQuestions: number}>;
+    worstCountries: Array<{countryCode: string; accuracy: number; totalAttempts: number}>;
+  }>;
+  
+  getStudyTimeBreakdown(userId: number, period: string): Promise<Array<{period: string; studyTime: number; sessionsCount: number}>>;
 }
 
 export class MemStorage implements IStorage {
@@ -58,6 +74,79 @@ export class MemStorage implements IStorage {
       username: "Alex",
       email: "alex@example.com",
     });
+    
+    // Add sample data for demonstration
+    this.initializeSampleData();
+  }
+
+  private async initializeSampleData() {
+    const userId = 1;
+    const currentDate = new Date().toISOString().split('T')[0];
+    
+    // Add some sample progress data
+    const sampleCountries = ['US', 'CA', 'FR', 'DE', 'JP', 'AU', 'BR', 'IN', 'UK', 'IT'];
+    sampleCountries.forEach((countryCode, index) => {
+      const masteryLevel = Math.floor(Math.random() * 100);
+      const correctAnswers = Math.floor(Math.random() * 20) + 5;
+      const totalAttempts = correctAnswers + Math.floor(Math.random() * 10);
+      
+      this.userProgress.set(`${userId}-${countryCode}`, {
+        id: this.progressId++,
+        userId,
+        countryCode,
+        masteryLevel,
+        correctAnswers,
+        totalAttempts,
+        lastReviewed: new Date(),
+        needsReview: masteryLevel < 80
+      });
+    });
+
+    // Add sample quiz sessions
+    for (let i = 0; i < 10; i++) {
+      const sessionDate = new Date();
+      sessionDate.setDate(sessionDate.getDate() - i);
+      
+      this.quizSessions.set(this.sessionId++, {
+        id: this.sessionId,
+        userId,
+        mode: ['quiz', 'flashcards', 'typing'][Math.floor(Math.random() * 3)],
+        difficulty: ['beginner', 'intermediate', 'expert'][Math.floor(Math.random() * 3)],
+        questionsAsked: 10,
+        questionsCorrect: Math.floor(Math.random() * 8) + 2,
+        timeSpent: Math.floor(Math.random() * 600) + 300, // 5-15 minutes
+        completed: true,
+        startedAt: sessionDate,
+        completedAt: sessionDate
+      });
+    }
+
+    // Add sample daily stats
+    for (let i = 0; i < 30; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      
+      // 70% chance of activity
+      if (Math.random() > 0.3) {
+        this.dailyStats.set(`${userId}-${dateStr}`, {
+          id: this.statsId++,
+          userId,
+          date: dateStr,
+          countriesLearned: Math.floor(Math.random() * 5) + 1,
+          questionsAnswered: Math.floor(Math.random() * 20) + 5,
+          questionsCorrect: Math.floor(Math.random() * 15) + 3,
+          studyTime: Math.floor(Math.random() * 45) + 5 // 5-50 minutes
+        });
+      }
+    }
+
+    // Update user with realistic stats
+    const user = this.users.get(userId);
+    if (user) {
+      user.currentStreak = 7;
+      user.totalStudyTime = 720; // 12 hours
+    }
   }
 
   async getUser(id: number): Promise<User | undefined> {
@@ -250,6 +339,158 @@ export class MemStorage implements IStorage {
       totalStudyTime: user?.totalStudyTime || 0,
       currentStreak: user?.currentStreak || 0,
     };
+  }
+
+  async getMasteryDetails(userId: number): Promise<{
+    masteredCountries: Array<{countryCode: string; masteryLevel: number; correctAnswers: number; totalAttempts: number}>;
+    unmasteredCountries: Array<{countryCode: string; masteryLevel: number; correctAnswers: number; totalAttempts: number}>;
+  }> {
+    const progress = await this.getUserProgress(userId);
+    
+    const masteredCountries = progress
+      .filter(p => p.masteryLevel >= 80)
+      .map(p => ({
+        countryCode: p.countryCode,
+        masteryLevel: p.masteryLevel,
+        correctAnswers: p.correctAnswers,
+        totalAttempts: p.totalAttempts
+      }));
+    
+    const unmasteredCountries = progress
+      .filter(p => p.masteryLevel < 80)
+      .map(p => ({
+        countryCode: p.countryCode,
+        masteryLevel: p.masteryLevel,
+        correctAnswers: p.correctAnswers,
+        totalAttempts: p.totalAttempts
+      }));
+    
+    return { masteredCountries, unmasteredCountries };
+  }
+
+  async getStreakCalendar(userId: number): Promise<Array<{date: string; hasActivity: boolean; studyTime: number}>> {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const calendarData = [];
+    const currentDate = new Date(thirtyDaysAgo);
+    
+    while (currentDate <= new Date()) {
+      const dateStr = currentDate.toISOString().split('T')[0];
+      const stats = await this.getDailyStats(userId, dateStr);
+      
+      calendarData.push({
+        date: dateStr,
+        hasActivity: stats ? stats.studyTime > 0 : false,
+        studyTime: stats?.studyTime || 0
+      });
+      
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    return calendarData;
+  }
+
+  async getAccuracyDetails(userId: number): Promise<{
+    byDifficulty: Array<{difficulty: string; accuracy: number; totalQuestions: number}>;
+    byStudyMode: Array<{mode: string; accuracy: number; totalQuestions: number}>;
+    worstCountries: Array<{countryCode: string; accuracy: number; totalAttempts: number}>;
+  }> {
+    const sessions = await this.getUserQuizSessions(userId);
+    const progress = await this.getUserProgress(userId);
+    
+    // Group by difficulty
+    const difficultyMap = new Map<string, {correct: number; total: number}>();
+    sessions.forEach(session => {
+      const existing = difficultyMap.get(session.difficulty) || {correct: 0, total: 0};
+      existing.correct += session.questionsCorrect;
+      existing.total += session.questionsAsked;
+      difficultyMap.set(session.difficulty, existing);
+    });
+    
+    const byDifficulty = Array.from(difficultyMap.entries()).map(([difficulty, data]) => ({
+      difficulty,
+      accuracy: data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0,
+      totalQuestions: data.total
+    }));
+    
+    // Group by study mode
+    const modeMap = new Map<string, {correct: number; total: number}>();
+    sessions.forEach(session => {
+      const existing = modeMap.get(session.mode) || {correct: 0, total: 0};
+      existing.correct += session.questionsCorrect;
+      existing.total += session.questionsAsked;
+      modeMap.set(session.mode, existing);
+    });
+    
+    const byStudyMode = Array.from(modeMap.entries()).map(([mode, data]) => ({
+      mode,
+      accuracy: data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0,
+      totalQuestions: data.total
+    }));
+    
+    // Worst performing countries
+    const worstCountries = progress
+      .filter(p => p.totalAttempts > 0)
+      .map(p => ({
+        countryCode: p.countryCode,
+        accuracy: Math.round((p.correctAnswers / p.totalAttempts) * 100),
+        totalAttempts: p.totalAttempts
+      }))
+      .sort((a, b) => a.accuracy - b.accuracy)
+      .slice(0, 10);
+    
+    return { byDifficulty, byStudyMode, worstCountries };
+  }
+
+  async getStudyTimeBreakdown(userId: number, period: string): Promise<Array<{period: string; studyTime: number; sessionsCount: number}>> {
+    const sessions = await this.getUserQuizSessions(userId);
+    const now = new Date();
+    
+    const data = [];
+    const daysToShow = period === 'daily' ? 7 : period === 'weekly' ? 4 : period === 'monthly' ? 12 : period === 'yearly' ? 5 : 30;
+    
+    for (let i = daysToShow - 1; i >= 0; i--) {
+      let periodStart: Date;
+      let periodLabel: string;
+      
+      if (period === 'daily') {
+        periodStart = new Date(now);
+        periodStart.setDate(now.getDate() - i);
+        periodLabel = periodStart.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      } else if (period === 'weekly') {
+        periodStart = new Date(now);
+        periodStart.setDate(now.getDate() - (i * 7));
+        periodLabel = `Week ${daysToShow - i}`;
+      } else if (period === 'monthly') {
+        periodStart = new Date(now);
+        periodStart.setMonth(now.getMonth() - i);
+        periodLabel = periodStart.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      } else {
+        periodStart = new Date(now);
+        periodStart.setFullYear(now.getFullYear() - i);
+        periodLabel = periodStart.getFullYear().toString();
+      }
+      
+      const periodSessions = sessions.filter(session => {
+        const sessionDate = new Date(session.startedAt);
+        return sessionDate >= periodStart && 
+               (period === 'daily' ? sessionDate.toDateString() === periodStart.toDateString() :
+                period === 'weekly' ? sessionDate >= periodStart && sessionDate < new Date(periodStart.getTime() + 7 * 24 * 60 * 60 * 1000) :
+                period === 'monthly' ? sessionDate.getMonth() === periodStart.getMonth() && sessionDate.getFullYear() === periodStart.getFullYear() :
+                sessionDate.getFullYear() === periodStart.getFullYear());
+      });
+      
+      const totalTime = periodSessions.reduce((sum, s) => sum + (s.timeSpent || 0), 0);
+      
+      data.push({
+        period: periodLabel,
+        studyTime: Math.round(totalTime / 60), // Convert to minutes
+        sessionsCount: periodSessions.length
+      });
+    }
+    
+    return data;
   }
 }
 

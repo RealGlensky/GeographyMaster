@@ -8,6 +8,7 @@ interface ProgressCardProps {
   icon: LucideIcon;
   iconColor: string;
   valueColor?: string;
+  onClick?: () => void;
 }
 
 export function ProgressCard({ 
@@ -16,10 +17,14 @@ export function ProgressCard({
   subtitle, 
   icon: Icon, 
   iconColor, 
-  valueColor = "text-gray-900" 
+  valueColor = "text-gray-900",
+  onClick
 }: ProgressCardProps) {
   return (
-    <Card>
+    <Card 
+      className={`${onClick ? 'cursor-pointer hover:shadow-lg transition-shadow' : ''}`}
+      onClick={onClick}
+    >
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div>

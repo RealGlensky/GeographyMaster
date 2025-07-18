@@ -10,6 +10,7 @@ import Flashcards from "@/pages/flashcards";
 import TypingPractice from "@/pages/typing-practice";
 import MapChallenge from "@/pages/map-challenge";
 import Profile from "@/pages/profile";
+import AnalyticsDashboard from "@/pages/analytics-dashboard";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -21,6 +22,7 @@ function Router() {
       <Route path="/typing-practice" component={TypingPractice} />
       <Route path="/map-challenge" component={MapChallenge} />
       <Route path="/profile" component={Profile} />
+      <Route path="/analytics-dashboard" component={AnalyticsDashboard} />
       <Route component={NotFound} />
     </Switch>
   );
