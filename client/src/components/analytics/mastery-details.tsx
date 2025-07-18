@@ -8,6 +8,15 @@ import { CountryFlag } from "@/components/country-flag";
 import { PronunciationButton } from "@/components/pronunciation-button";
 import { countries } from "@/data/countries";
 
+// Difficulty color mapping to match the difficulty selector
+const difficultyColors = {
+  beginner: "bg-green-100 text-green-600",
+  easy: "bg-blue-100 text-blue-600", 
+  intermediate: "bg-yellow-100 text-yellow-600",
+  advanced: "bg-orange-100 text-orange-600",
+  expert: "bg-red-100 text-red-600",
+};
+
 export function MasteryDetails() {
   const { data: masteryData, isLoading } = useQuery({
     queryKey: ["/api/user/mastery-details"],
@@ -159,7 +168,7 @@ export function MasteryDetails() {
                   </div>
                   
                   <div className="text-right">
-                    <Badge variant={country.isMastered ? "default" : "secondary"}>
+                    <Badge className={difficultyColors[country.difficulty as keyof typeof difficultyColors] || "bg-gray-100 text-gray-600"}>
                       {country.difficulty}
                     </Badge>
                     {country.totalAttempts > 0 && (
