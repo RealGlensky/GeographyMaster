@@ -146,8 +146,8 @@ export default function Flashcards() {
 
         {/* Flashcard */}
         <div className="mb-6">
-          <div className="flip-card w-full h-80">
-            <div className={`flip-card-inner ${flashcard.showAnswer ? 'flipped' : ''}`}>
+          <div className={`flip-card w-full h-80 ${flashcard.showAnswer ? 'flipped' : ''}`}>
+            <div className="flip-card-inner">
               {/* Front of card */}
               <Card className="flip-card-front cursor-pointer" onClick={flipCard}>
                 <CardContent className="h-80 flex flex-col items-center justify-center p-8">
