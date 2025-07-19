@@ -11,6 +11,7 @@ import { Difficulty, Country, User } from "@shared/schema";
 import { getCountriesByDifficulty } from "@/data/countries";
 import { CountryFlag } from "@/components/country-flag";
 import { PronunciationButton } from "@/components/pronunciation-button";
+import { WorldMap } from "@/components/world-map";
 import { apiRequest } from "@/lib/queryClient";
 import { formatTime, isTypingCorrect } from "@/lib/utils";
 
@@ -466,132 +467,34 @@ export default function MapChallenge() {
                   <Globe className="w-5 h-5 text-gray-500" />
                 </div>
                 
-                {/* Enhanced World Map */}
-                <div className="relative bg-gradient-to-b from-blue-100 to-blue-50 rounded-lg border-2 border-blue-200 min-h-[500px] overflow-hidden">
-                  <svg
-                    viewBox="0 0 800 500"
-                    className="w-full h-full"
-                    onMouseLeave={() => setHoveredCountry(null)}
-                  >
-                    {/* Background ocean */}
-                    <rect width="800" height="500" fill="#e0f2fe" />
-                    
-                    {/* Country regions - simplified world map representation */}
-                    {countries.slice(0, 20).map((country, index) => {
-                      const isTargetCountry = currentQuestion?.type === 'locate-country' && 
-                                            currentQuestion.correctAnswer === country.code;
-                      const isSelected = selectedCountry === country.code;
-                      const isHovered = hoveredCountry === country.code;
-                      
-                      // Create varied country shapes and positions
-                      const regions = generateCountryRegions(country, index, countries.length);
-                      
-                      let fillColor = "#d1d5db"; // default light gray
-                      let strokeColor = "#9ca3af";
-                      let strokeWidth = 1;
-                      
-                      if (showResult && isTargetCountry && isCorrect) {
-                        fillColor = "#10b981"; // correct - green
-                        strokeColor = "#059669";
-                        strokeWidth = 3;
-                      } else if (showResult && isSelected && !isCorrect) {
-                        fillColor = "#ef4444"; // incorrect - red  
-                        strokeColor = "#dc2626";
-                        strokeWidth = 3;
-                      } else if (isSelected) {
-                        fillColor = "#3b82f6"; // selected - blue
-                        strokeColor = "#2563eb";
-                        strokeWidth = 2;
-                      } else if (isHovered) {
-                        fillColor = "#f3f4f6"; // hover - lighter gray
-                        strokeColor = "#6b7280";
-                        strokeWidth = 2;
-                      }
-                      
-                      return (
-                        <g key={country.code}>
-                          {regions.map((region, regionIndex) => (
-                            <path
-                              key={`${country.code}-${regionIndex}`}
-                              d={region.path}
-                              fill={fillColor}
-                              stroke={strokeColor}
-                              strokeWidth={strokeWidth}
-                              className={currentQuestion?.type === 'locate-country' && !isAnswered
-                                ? "cursor-pointer hover:opacity-80 transition-all" 
-                                : ""}
-                              onClick={() => currentQuestion?.type === 'locate-country' && 
-                                           !isAnswered && handleCountryClick(country.code)}
-                              onMouseEnter={() => !isAnswered && setHoveredCountry(country.code)}
-                            />
-                          ))}
-                          
-                          {/* Country label */}
-                          {(isHovered || isSelected || (showResult && isTargetCountry)) && (
-                            <text
-                              x={regions[0]?.centerX || 0}
-                              y={regions[0]?.centerY || 0}
-                              textAnchor="middle"
-                              dominantBaseline="middle"
-                              fontSize="12"
-                              fontWeight="bold"
-                              fill="#1f2937"
-                              className="pointer-events-none select-none"
-                              style={{ textShadow: '1px 1px 2px rgba(255,255,255,0.8)' }}
-                            >
-                              {country.name.length > 12 ? country.name.substring(0, 12) + '...' : country.name}
-                            </text>
-                          )}
-                        </g>
-                      );
-                    })}
-                    
-                    {/* Grid lines for better visual reference */}
-                    <defs>
-                      <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#e5e7eb" strokeWidth="0.5" opacity="0.5"/>
-                      </pattern>
-                    </defs>
-                    <rect width="800" height="500" fill="url(#grid)" />
-                  </svg>
-                  
-                  {/* Map legend */}
-                  <div className="absolute bottom-4 left-4 bg-white rounded-lg p-3 shadow-lg border">
-                    <div className="flex flex-wrap gap-3 text-xs">
-                      <div className="flex items-center space-x-1">
-                        <div className="w-3 h-3 bg-gray-300 rounded"></div>
-                        <span>Countries</span>
-                      </div>
-                      {currentQuestion?.type === 'locate-country' && !isAnswered && (
-                        <div className="flex items-center space-x-1">
-                          <div className="w-3 h-3 bg-gray-100 border border-gray-400 rounded"></div>
-                          <span>Hover to see name</span>
-                        </div>
-                      )}
-                      {showResult && (
-                        <>
-                          <div className="flex items-center space-x-1">
-                            <div className="w-3 h-3 bg-green-500 rounded"></div>
-                            <span>Correct</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <div className="w-3 h-3 bg-red-500 rounded"></div>
-                            <span>Incorrect</span>
-                          </div>
-                        </>
-                      )}
-                    </div>
+                {/* World Map Component */}
+                <WorldMap
+                  countries={countries}
+                  selectedCountry={selectedCountry}
+                  hoveredCountry={hoveredCountry}
+                  targetCountry={currentQuestion?.type === 'locate-country' ? currentQuestion.country.code : undefined}
+                  showResult={showResult}
+                  isCorrect={isCorrect}
+                  onCountryClick={(countryCode) => {
+                    if (currentQuestion?.type === 'locate-country' && !isAnswered) {
+                      handleCountryClick(countryCode);
+                    }
+                  }}
+                  onCountryHover={(countryCode) => {
+                    if (!isAnswered) {
+                      setHoveredCountry(countryCode);
+                    }
+                  }}
+                />
+                
+                {/* Hint overlay for locate questions */}
+                {currentQuestion?.type === 'locate-country' && !isAnswered && (
+                  <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg p-3 shadow-lg border z-10">
+                    <p className="text-sm text-gray-600">
+                      Click on <span className="font-semibold text-gray-900">{currentQuestion.country.name}</span> on the map
+                    </p>
                   </div>
-                  
-                  {/* Hint overlay for locate questions */}
-                  {currentQuestion?.type === 'locate-country' && !isAnswered && (
-                    <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg p-3 shadow-lg border">
-                      <p className="text-sm text-gray-600">
-                        Click on <span className="font-semibold text-gray-900">{currentQuestion.country.name}</span> on the map
-                      </p>
-                    </div>
-                  )}
-                </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -736,63 +639,5 @@ export default function MapChallenge() {
     </div>
   );
 
-  // Helper function to generate country regions for the map
-  function generateCountryRegions(country: Country, index: number, total: number) {
-    const cols = Math.ceil(Math.sqrt(total));
-    const x = (index % cols) * (800 / cols);
-    const y = Math.floor(index / cols) * (500 / Math.ceil(total / cols));
-    const width = 800 / cols;
-    const height = 500 / Math.ceil(total / cols);
-    
-    // Create more interesting shapes for countries instead of rectangles
-    const centerX = x + width / 2;
-    const centerY = y + height / 2;
-    const shapeVariant = index % 4;
-    
-    let path = "";
-    
-    switch (shapeVariant) {
-      case 0: // Irregular polygon
-        path = `M ${x + width * 0.2} ${y + height * 0.3} 
-                L ${x + width * 0.8} ${y + height * 0.1} 
-                L ${x + width * 0.9} ${y + height * 0.7} 
-                L ${x + width * 0.6} ${y + height * 0.9} 
-                L ${x + width * 0.1} ${y + height * 0.8} Z`;
-        break;
-      case 1: // Rounded rectangle
-        path = `M ${x + width * 0.1} ${y + height * 0.2} 
-                Q ${x + width * 0.1} ${y + height * 0.1} ${x + width * 0.2} ${y + height * 0.1}
-                L ${x + width * 0.8} ${y + height * 0.1}
-                Q ${x + width * 0.9} ${y + height * 0.1} ${x + width * 0.9} ${y + height * 0.2}
-                L ${x + width * 0.9} ${y + height * 0.8}
-                Q ${x + width * 0.9} ${y + height * 0.9} ${x + width * 0.8} ${y + height * 0.9}
-                L ${x + width * 0.2} ${y + height * 0.9}
-                Q ${x + width * 0.1} ${y + height * 0.9} ${x + width * 0.1} ${y + height * 0.8} Z`;
-        break;
-      case 2: // Star-like shape
-        path = `M ${centerX} ${y + height * 0.1}
-                L ${x + width * 0.7} ${y + height * 0.4}
-                L ${x + width * 0.9} ${y + height * 0.4}
-                L ${x + width * 0.75} ${y + height * 0.6}
-                L ${x + width * 0.8} ${y + height * 0.9}
-                L ${centerX} ${y + height * 0.75}
-                L ${x + width * 0.2} ${y + height * 0.9}
-                L ${x + width * 0.25} ${y + height * 0.6}
-                L ${x + width * 0.1} ${y + height * 0.4}
-                L ${x + width * 0.3} ${y + height * 0.4} Z`;
-        break;
-      default: // Oval
-        path = `M ${x + width * 0.5} ${y + height * 0.1}
-                Q ${x + width * 0.9} ${y + height * 0.1} ${x + width * 0.9} ${y + height * 0.5}
-                Q ${x + width * 0.9} ${y + height * 0.9} ${x + width * 0.5} ${y + height * 0.9}
-                Q ${x + width * 0.1} ${y + height * 0.9} ${x + width * 0.1} ${y + height * 0.5}
-                Q ${x + width * 0.1} ${y + height * 0.1} ${x + width * 0.5} ${y + height * 0.1} Z`;
-    }
-    
-    return [{
-      path,
-      centerX,
-      centerY
-    }];
-  }
+
 }
