@@ -130,14 +130,16 @@ export function LeafletWorldMap({
     };
   }, [isLoaded]);
 
-  // Update markers
+  // Update markers with debouncing
   useEffect(() => {
     if (!map || !window.L) return;
 
-    // Clear existing markers
-    markers.forEach(marker => map.removeLayer(marker));
+    // Debounce to reduce jumpiness
+    const timeoutId = setTimeout(() => {
+      // Clear existing markers
+      markers.forEach(marker => map.removeLayer(marker));
 
-    const newMarkers = availableCountries.map(country => {
+      const newMarkers = availableCountries.map(country => {
       const coordinates = COUNTRY_COORDINATES[country.code];
       if (!coordinates) return null;
 
@@ -145,29 +147,34 @@ export function LeafletWorldMap({
       const isSelected = selectedCountry === country.code;
       const isHovered = hoveredCountry === country.code;
 
-      let color = '#d1d5db';
-      let size = 12;
+      let color = '#3b82f6';
+      let size = 6;
+      let opacity = 0.6;
 
       if (showResult && isTarget && isCorrect) {
         color = '#10b981';
-        size = 16;
+        size = 10;
+        opacity = 0.9;
       } else if (showResult && isSelected && !isCorrect) {
         color = '#ef4444';
-        size = 16;
+        size = 10;
+        opacity = 0.9;
       } else if (isSelected) {
-        color = '#3b82f6';
-        size = 14;
+        color = '#2563eb';
+        size = 8;
+        opacity = 0.8;
       } else if (isHovered) {
-        color = '#6b7280';
-        size = 13;
+        color = '#1d4ed8';
+        size = 7;
+        opacity = 0.7;
       }
 
       const marker = window.L.circleMarker([coordinates.lat, coordinates.lng], {
         radius: size,
         fillColor: color,
-        fillOpacity: 0.8,
+        fillOpacity: opacity,
         color: '#ffffff',
-        weight: 2,
+        weight: 1,
         opacity: 1
       }).addTo(map);
 
@@ -195,7 +202,10 @@ export function LeafletWorldMap({
       return marker;
     }).filter(Boolean);
 
-    setMarkers(newMarkers);
+      setMarkers(newMarkers);
+    }, 100); // 100ms debounce
+
+    return () => clearTimeout(timeoutId);
   }, [map, availableCountries, selectedCountry, hoveredCountry, targetCountry, showResult, isCorrect]);
 
   if (!isLoaded) {

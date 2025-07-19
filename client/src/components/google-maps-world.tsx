@@ -151,14 +151,16 @@ export function GoogleMapsWorld({
     setMap(googleMap);
   }, [isLoaded]);
 
-  // Update markers
+  // Update markers with debouncing to reduce jumpiness
   useEffect(() => {
     if (!map || !window.google) return;
 
-    // Clear existing markers
-    markers.forEach(marker => marker.setMap(null));
+    // Debounce marker updates to prevent rapid re-rendering
+    const timeoutId = setTimeout(() => {
+      // Clear existing markers
+      markers.forEach(marker => marker.setMap(null));
 
-    const newMarkers = availableCountries.map(country => {
+      const newMarkers = availableCountries.map(country => {
       const coordinates = COUNTRY_COORDINATES[country.code];
       if (!coordinates) return null;
 
@@ -168,29 +170,36 @@ export function GoogleMapsWorld({
 
       let icon = {
         path: window.google.maps.SymbolPath.CIRCLE,
-        scale: 12,
-        fillColor: '#d1d5db',
-        fillOpacity: 0.8,
-        strokeWeight: 2,
-        strokeColor: '#9ca3af'
+        scale: 8,
+        fillColor: '#3b82f6',
+        fillOpacity: 0.6,
+        strokeWeight: 1,
+        strokeColor: '#ffffff'
       };
 
       if (showResult && isTarget && isCorrect) {
         icon.fillColor = '#10b981';
-        icon.strokeColor = '#059669';
-        icon.scale = 15;
+        icon.strokeColor = '#ffffff';
+        icon.scale = 12;
+        icon.fillOpacity = 0.9;
+        icon.strokeWeight = 2;
       } else if (showResult && isSelected && !isCorrect) {
         icon.fillColor = '#ef4444';
-        icon.strokeColor = '#dc2626';
-        icon.scale = 15;
+        icon.strokeColor = '#ffffff';
+        icon.scale = 12;
+        icon.fillOpacity = 0.9;
+        icon.strokeWeight = 2;
       } else if (isSelected) {
-        icon.fillColor = '#3b82f6';
-        icon.strokeColor = '#2563eb';
-        icon.scale = 14;
+        icon.fillColor = '#2563eb';
+        icon.strokeColor = '#ffffff';
+        icon.scale = 10;
+        icon.fillOpacity = 0.8;
+        icon.strokeWeight = 2;
       } else if (isHovered) {
-        icon.fillColor = '#f3f4f6';
-        icon.strokeColor = '#6b7280';
-        icon.scale = 13;
+        icon.fillColor = '#1d4ed8';
+        icon.strokeColor = '#ffffff';
+        icon.scale = 9;
+        icon.fillOpacity = 0.7;
       }
 
       const marker = new window.google.maps.Marker({
@@ -218,7 +227,10 @@ export function GoogleMapsWorld({
       return marker;
     }).filter(Boolean);
 
-    setMarkers(newMarkers);
+      setMarkers(newMarkers);
+    }, 100); // 100ms debounce
+
+    return () => clearTimeout(timeoutId);
   }, [map, availableCountries, selectedCountry, hoveredCountry, targetCountry, showResult, isCorrect]);
 
   if (!isLoaded) {
