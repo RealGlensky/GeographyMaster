@@ -164,6 +164,10 @@ export function AccuracyDetails() {
 
   // Show detailed view if a difficulty is selected
   if (selectedDifficulty) {
+    console.log('Selected difficulty:', selectedDifficulty);
+    console.log('Difficulty details:', difficultyDetails);
+    console.log('Is loading details:', isLoadingDetails);
+    
     if (isLoadingDetails) {
       return (
         <div className="space-y-6">
