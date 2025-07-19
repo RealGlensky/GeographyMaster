@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Country } from "@shared/schema";
+import { COUNTRY_COORDINATES } from "@shared/country-coordinates";
 
 interface LeafletWorldMapProps {
   countries: Country[];
@@ -12,43 +13,6 @@ interface LeafletWorldMapProps {
   onCountryClick?: (countryCode: string) => void;
   onCountryHover?: (countryCode: string | null) => void;
 }
-
-// Country coordinates for Leaflet
-const COUNTRY_COORDINATES: Record<string, { lat: number; lng: number; name: string }> = {
-  'US': { lat: 39.8283, lng: -98.5795, name: 'United States' },
-  'CA': { lat: 56.1304, lng: -106.3468, name: 'Canada' },
-  'MX': { lat: 23.6345, lng: -102.5528, name: 'Mexico' },
-  'BR': { lat: -14.2350, lng: -51.9253, name: 'Brazil' },
-  'AR': { lat: -38.4161, lng: -63.6167, name: 'Argentina' },
-  'PE': { lat: -9.1900, lng: -75.0152, name: 'Peru' },
-  'CL': { lat: -35.6751, lng: -71.5430, name: 'Chile' },
-  'GB': { lat: 55.3781, lng: -3.4360, name: 'United Kingdom' },
-  'FR': { lat: 46.6034, lng: 1.8883, name: 'France' },
-  'DE': { lat: 51.1657, lng: 10.4515, name: 'Germany' },
-  'ES': { lat: 40.4637, lng: -3.7492, name: 'Spain' },
-  'IT': { lat: 41.8719, lng: 12.5674, name: 'Italy' },
-  'NO': { lat: 60.4720, lng: 8.4689, name: 'Norway' },
-  'SE': { lat: 60.1282, lng: 18.6435, name: 'Sweden' },
-  'RU': { lat: 61.5240, lng: 105.3188, name: 'Russia' },
-  'DZ': { lat: 28.0339, lng: 1.6596, name: 'Algeria' },
-  'LY': { lat: 26.3351, lng: 17.2283, name: 'Libya' },
-  'EG': { lat: 26.8206, lng: 30.8025, name: 'Egypt' },
-  'NG': { lat: 9.0820, lng: 8.6753, name: 'Nigeria' },
-  'KE': { lat: -0.0236, lng: 37.9062, name: 'Kenya' },
-  'ZA': { lat: -30.5595, lng: 22.9375, name: 'South Africa' },
-  'CN': { lat: 35.8617, lng: 104.1954, name: 'China' },
-  'IN': { lat: 20.5937, lng: 78.9629, name: 'India' },
-  'JP': { lat: 36.2048, lng: 138.2529, name: 'Japan' },
-  'ID': { lat: -0.7893, lng: 113.9213, name: 'Indonesia' },
-  'TH': { lat: 15.8700, lng: 100.9925, name: 'Thailand' },
-  'MY': { lat: 4.2105, lng: 101.9758, name: 'Malaysia' },
-  'PH': { lat: 12.8797, lng: 121.7740, name: 'Philippines' },
-  'KR': { lat: 35.9078, lng: 127.7669, name: 'South Korea' },
-  'TR': { lat: 38.9637, lng: 35.2433, name: 'Turkey' },
-  'IR': { lat: 32.4279, lng: 53.6880, name: 'Iran' },
-  'AU': { lat: -25.2744, lng: 133.7751, name: 'Australia' },
-  'NZ': { lat: -40.9006, lng: 174.8860, name: 'New Zealand' },
-};
 
 declare global {
   interface Window {
