@@ -162,6 +162,272 @@ export function AccuracyDetails() {
     }
   };
 
+  // Show detailed view if a difficulty is selected
+  if (selectedDifficulty && difficultyDetails) {
+    return (
+      <div className="space-y-6">
+        {/* Header with back button */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Target className="w-5 h-5 text-blue-600" />
+                {difficultyLabels[selectedDifficulty as keyof typeof difficultyLabels]} Level Performance
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedDifficulty(null)}
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Overview
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="text-center p-4 bg-blue-50 rounded-lg">
+                <div className="text-2xl font-bold text-blue-600 mb-1">
+                  {difficultyDetails.byDifficulty?.[0]?.accuracy || 0}%
+                </div>
+                <div className="text-sm text-blue-700">Overall Accuracy</div>
+              </div>
+              <div className="text-center p-4 bg-green-50 rounded-lg">
+                <div className="text-2xl font-bold text-green-600 mb-1">
+                  {difficultyDetails.byDifficulty?.[0]?.totalQuestions || 0}
+                </div>
+                <div className="text-sm text-green-700">Total Questions</div>
+              </div>
+              <div className="text-center p-4 bg-purple-50 rounded-lg">
+                <div className="text-2xl font-bold text-purple-600 mb-1">
+                  {Math.round((difficultyDetails.byDifficulty?.[0]?.accuracy || 0) * (difficultyDetails.byDifficulty?.[0]?.totalQuestions || 0) / 100)}
+                </div>
+                <div className="text-sm text-purple-700">Correct Answers</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Study Mode Performance for this difficulty */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="w-5 h-5 text-green-600" />
+              Study Mode Performance ({difficultyLabels[selectedDifficulty as keyof typeof difficultyLabels]})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {difficultyDetails.byStudyMode?.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <BookOpen className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <div className="text-lg font-medium mb-2">No data for this difficulty level</div>
+                  <div className="text-sm">
+                    Try practicing more questions at the {difficultyLabels[selectedDifficulty as keyof typeof difficultyLabels]} level!
+                  </div>
+                </div>
+              ) : (
+                difficultyDetails.byStudyMode?.map((item: any) => (
+                  <div key={item.mode} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{getModeIcon(item.mode)}</span>
+                      <div>
+                        <div className="font-medium capitalize">{item.mode}</div>
+                        <div className="text-sm text-gray-600">
+                          {item.totalQuestions} questions answered
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <div className={`text-2xl font-bold ${getAccuracyColor(item.accuracy)}`}>
+                          {item.accuracy}%
+                        </div>
+                      </div>
+                      <div className="w-32">
+                        <Progress 
+                          value={item.accuracy} 
+                          className="h-3"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Worst Countries for this difficulty */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingDown className="w-5 h-5 text-red-600" />
+              Countries Needing Improvement ({difficultyLabels[selectedDifficulty as keyof typeof difficultyLabels]})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {difficultyDetails.worstCountries?.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <TrendingDown className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <div className="text-lg font-medium mb-2">No performance data</div>
+                <div className="text-sm">
+                  Complete more questions at this difficulty level to see areas for improvement.
+                </div>
+              </div>
+            ) : (
+              <ScrollArea className="h-64">
+                <div className="space-y-3">
+                  {difficultyDetails.worstCountries?.map((item: any, index: number) => {
+                    const country = countries.find(c => c.code === item.countryCode);
+                    if (!country) return null;
+
+                    return (
+                      <div key={item.countryCode} className="flex items-center justify-between p-3 bg-red-50 border border-red-100 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-6 h-6 bg-red-100 rounded-full text-xs font-bold text-red-600">
+                            {index + 1}
+                          </div>
+                          <CountryFlag 
+                            countryCode={country.code} 
+                            countryName={country.name} 
+                            size="sm"
+                          />
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{country.name}</span>
+                              <PronunciationButton 
+                                text={country.name}
+                                size="sm"
+                                variant="ghost"
+                                className="h-3 w-3 p-0"
+                              />
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <span>{country.capital}</span>
+                              <PronunciationButton 
+                                text={country.capital}
+                                size="sm"
+                                variant="ghost"
+                                className="h-3 w-3 p-0"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <Badge variant={getAccuracyBadgeVariant(item.accuracy)}>
+                            {item.accuracy}% accuracy
+                          </Badge>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {item.totalAttempts} attempts
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Improvement Tips for this level */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Brain className="w-5 h-5 text-purple-600" />
+              {difficultyLabels[selectedDifficulty as keyof typeof difficultyLabels]} Level Tips
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {selectedDifficulty === 'beginner' && (
+                <>
+                  <div className="p-4 bg-green-50 rounded-lg">
+                    <div className="font-medium text-green-800 mb-2">Start with Major Countries</div>
+                    <div className="text-sm text-green-700">
+                      Focus on well-known countries and capitals to build confidence.
+                    </div>
+                  </div>
+                  <div className="p-4 bg-blue-50 rounded-lg">
+                    <div className="font-medium text-blue-800 mb-2">Use Visual Learning</div>
+                    <div className="text-sm text-blue-700">
+                      Try the map challenge mode to associate countries with their locations.
+                    </div>
+                  </div>
+                </>
+              )}
+              {selectedDifficulty === 'easy' && (
+                <>
+                  <div className="p-4 bg-blue-50 rounded-lg">
+                    <div className="font-medium text-blue-800 mb-2">Build Foundations</div>
+                    <div className="text-sm text-blue-700">
+                      Master these easier countries before moving to intermediate level.
+                    </div>
+                  </div>
+                  <div className="p-4 bg-green-50 rounded-lg">
+                    <div className="font-medium text-green-800 mb-2">Repetition Practice</div>
+                    <div className="text-sm text-green-700">
+                      Use flashcards mode for quick review and reinforcement.
+                    </div>
+                  </div>
+                </>
+              )}
+              {selectedDifficulty === 'intermediate' && (
+                <>
+                  <div className="p-4 bg-yellow-50 rounded-lg">
+                    <div className="font-medium text-yellow-800 mb-2">Regional Focus</div>
+                    <div className="text-sm text-yellow-700">
+                      Study countries by continent to build stronger regional knowledge.
+                    </div>
+                  </div>
+                  <div className="p-4 bg-orange-50 rounded-lg">
+                    <div className="font-medium text-orange-800 mb-2">Pattern Recognition</div>
+                    <div className="text-sm text-orange-700">
+                      Look for patterns in capital names and country relationships.
+                    </div>
+                  </div>
+                </>
+              )}
+              {selectedDifficulty === 'advanced' && (
+                <>
+                  <div className="p-4 bg-orange-50 rounded-lg">
+                    <div className="font-medium text-orange-800 mb-2">Active Recall</div>
+                    <div className="text-sm text-orange-700">
+                      Test yourself frequently without looking at answers first.
+                    </div>
+                  </div>
+                  <div className="p-4 bg-indigo-50 rounded-lg">
+                    <div className="font-medium text-indigo-800 mb-2">Mixed Practice</div>
+                    <div className="text-sm text-indigo-700">
+                      Combine different difficulty levels to enhance challenge and retention.
+                    </div>
+                  </div>
+                </>
+              )}
+              {selectedDifficulty === 'expert' && (
+                <>
+                  <div className="p-4 bg-red-50 rounded-lg">
+                    <div className="font-medium text-red-800 mb-2">Advanced Techniques</div>
+                    <div className="text-sm text-red-700">
+                      Use mnemonics and memory palace techniques for challenging countries.
+                    </div>
+                  </div>
+                  <div className="p-4 bg-purple-50 rounded-lg">
+                    <div className="font-medium text-purple-800 mb-2">Spaced Repetition</div>
+                    <div className="text-sm text-purple-700">
+                      Focus on frequent review of missed countries with increasing intervals.
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Accuracy by Difficulty */}
