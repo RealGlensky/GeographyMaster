@@ -151,19 +151,45 @@ export function MasteryDetails() {
                         )}
                       </div>
                       
-                      {country.totalAttempts > 0 && (
-                        <div className="mt-2">
-                          <div className="flex items-center gap-2 mb-1">
+                      <div className="mt-2">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
                             <span className="text-xs text-gray-500">
-                              Progress: {country.masteryLevel}%
+                              Mastery: {country.masteryLevel}%
                             </span>
-                            <span className="text-xs text-gray-500">
-                              ({country.correctAnswers}/{country.totalAttempts} correct)
-                            </span>
+                            {country.totalAttempts > 0 && (
+                              <span className="text-xs text-gray-500">
+                                ({country.correctAnswers}/{country.totalAttempts} correct)
+                              </span>
+                            )}
                           </div>
-                          <Progress value={country.masteryLevel} className="w-32 h-2" />
+                          {country.masteryLevel >= 85 && country.totalAttempts >= 3 ? (
+                            <span className="text-xs text-green-600 font-medium">Mastered</span>
+                          ) : country.totalAttempts === 0 ? (
+                            <span className="text-xs text-gray-400">Not Started</span>
+                          ) : country.totalAttempts < 3 ? (
+                            <span className="text-xs text-orange-500">Need {3 - country.totalAttempts} more</span>
+                          ) : (
+                            <span className="text-xs text-blue-600">Keep practicing</span>
+                          )}
                         </div>
-                      )}
+                        <div className="relative">
+                          <Progress 
+                            value={country.masteryLevel} 
+                            className="w-full h-3"
+                          />
+                          {/* Mastery threshold indicator line */}
+                          <div 
+                            className="absolute top-0 bottom-0 w-0.5 bg-green-600 opacity-70"
+                            style={{ left: '85%' }}
+                          />
+                        </div>
+                        {country.totalAttempts > 0 && country.masteryLevel < 85 && (
+                          <div className="mt-1 text-xs text-gray-400">
+                            {85 - country.masteryLevel} points to mastery
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                   
