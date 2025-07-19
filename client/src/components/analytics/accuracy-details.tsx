@@ -65,16 +65,64 @@ export function AccuracyDetails() {
 
   const { byDifficulty = [], byStudyMode = [], worstCountries = [] } = accuracyData || {};
 
-  // Ensure all difficulty levels are represented
+  // Ensure all difficulty levels are represented with calculated metrics
   const completeDifficultyData = allDifficultyLevels.map(level => {
     const existing = byDifficulty.find(item => item.difficulty === level);
-    return existing || {
+    const data = existing || {
       difficulty: level,
       accuracy: 0,
-      totalQuestions: 0,
-      correctAnswers: 0
+      totalQuestions: 0
+    };
+    
+    return {
+      ...data,
+      correctAnswers: Math.round((data.accuracy / 100) * data.totalQuestions),
+      incorrectAnswers: data.totalQuestions - Math.round((data.accuracy / 100) * data.totalQuestions),
+      completionRate: data.totalQuestions > 0 ? 100 : 0,
+      performanceLevel: data.accuracy >= 90 ? 'excellent' : data.accuracy >= 75 ? 'good' : data.accuracy >= 60 ? 'fair' : data.accuracy >= 40 ? 'needs-work' : 'struggling'
     };
   });
+
+  const getPerformanceColor = (level: string) => {
+    switch (level) {
+      case 'excellent': return 'text-green-600 bg-green-50';
+      case 'good': return 'text-blue-600 bg-blue-50';
+      case 'fair': return 'text-yellow-600 bg-yellow-50';
+      case 'needs-work': return 'text-orange-600 bg-orange-50';
+      case 'struggling': return 'text-red-600 bg-red-50';
+      default: return 'text-gray-600 bg-gray-50';
+    }
+  };
+
+  const getPerformanceLabel = (level: string) => {
+    switch (level) {
+      case 'excellent': return 'Excellent';
+      case 'good': return 'Good';
+      case 'fair': return 'Fair';
+      case 'needs-work': return 'Needs Work';
+      case 'struggling': return 'Struggling';
+      default: return 'No Data';
+    }
+  };
+
+  const getRecommendation = (difficulty: any) => {
+    if (difficulty.totalQuestions === 0) {
+      return "Start practicing to build experience in this difficulty level.";
+    }
+    if (difficulty.accuracy >= 90) {
+      return "Excellent performance! You've mastered this level.";
+    }
+    if (difficulty.accuracy >= 75) {
+      return "Good work! Focus on consistency to reach excellence.";
+    }
+    if (difficulty.accuracy >= 60) {
+      return "Keep practicing. Review incorrect answers to improve.";
+    }
+    if (difficulty.accuracy >= 40) {
+      return "More practice needed. Consider reviewing fundamentals.";
+    }
+    return "Focus on this level with targeted practice sessions.";
+  };
 
   // Show detailed view if a difficulty is selected
   if (selectedDifficulty) {
@@ -107,20 +155,249 @@ export function AccuracyDetails() {
             </CardContent>
           </Card>
         ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                {difficultyLabels[selectedDifficulty as keyof typeof difficultyLabels]} Level Performance
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-gray-500">
-                Detailed breakdown for {difficultyLabels[selectedDifficulty as keyof typeof difficultyLabels]} level coming soon!
-                <br />
-                This will show individual country performance, question types, and improvement suggestions.
-              </div>
-            </CardContent>
-          </Card>
+          <>
+            {/* Performance Overview */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="w-5 h-5 text-blue-600" />
+                  {difficultyLabels[selectedDifficulty as keyof typeof difficultyLabels]} Level Overview
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {(() => {
+                  const selectedData = completeDifficultyData.find(d => d.difficulty === selectedDifficulty);
+                  if (!selectedData || selectedData.totalQuestions === 0) {
+                    return (
+                      <div className="text-center py-8 text-gray-500">
+                        <Brain className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                        <div className="text-lg font-medium mb-2">No practice data yet</div>
+                        <div className="text-sm">
+                          Start practicing at the {difficultyLabels[selectedDifficulty as keyof typeof difficultyLabels]} level to see detailed performance analytics.
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                      <div className="text-center p-4 border rounded-lg">
+                        <div className="text-3xl font-bold text-blue-600 mb-2">
+                          {selectedData.accuracy}%
+                        </div>
+                        <div className="text-sm text-gray-600">Overall Accuracy</div>
+                        <Badge className={`mt-2 ${getPerformanceColor(selectedData.performanceLevel)}`}>
+                          {getPerformanceLabel(selectedData.performanceLevel)}
+                        </Badge>
+                      </div>
+
+                      <div className="text-center p-4 border rounded-lg">
+                        <div className="text-3xl font-bold text-green-600 mb-2">
+                          {selectedData.correctAnswers}
+                        </div>
+                        <div className="text-sm text-gray-600">Correct Answers</div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          Out of {selectedData.totalQuestions} total
+                        </div>
+                      </div>
+
+                      <div className="text-center p-4 border rounded-lg">
+                        <div className="text-3xl font-bold text-red-600 mb-2">
+                          {selectedData.incorrectAnswers}
+                        </div>
+                        <div className="text-sm text-gray-600">Incorrect Answers</div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {selectedData.totalQuestions > 0 ? Math.round((selectedData.incorrectAnswers / selectedData.totalQuestions) * 100) : 0}% of total
+                        </div>
+                      </div>
+
+                      <div className="text-center p-4 border rounded-lg">
+                        <div className="text-3xl font-bold text-purple-600 mb-2">
+                          {selectedData.totalQuestions}
+                        </div>
+                        <div className="text-sm text-gray-600">Questions Attempted</div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          At this difficulty level
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+
+            {/* Performance Analysis */}
+            {(() => {
+              const selectedData = completeDifficultyData.find(d => d.difficulty === selectedDifficulty);
+              if (!selectedData || selectedData.totalQuestions === 0) return null;
+
+              return (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <TrendingDown className="w-5 h-5 text-orange-600" />
+                        Performance Analysis
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">Accuracy Rate</span>
+                          <span className={`font-bold ${getAccuracyColor(selectedData.accuracy)}`}>
+                            {selectedData.accuracy}%
+                          </span>
+                        </div>
+                        <Progress value={selectedData.accuracy} className="h-2" />
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">Success Ratio</span>
+                          <span className="font-bold text-gray-700">
+                            {selectedData.correctAnswers}:{selectedData.incorrectAnswers}
+                          </span>
+                        </div>
+                        <div className="flex h-2 rounded-full overflow-hidden bg-gray-200">
+                          <div 
+                            className="bg-green-500" 
+                            style={{ width: `${(selectedData.correctAnswers / selectedData.totalQuestions) * 100}%` }}
+                          />
+                          <div 
+                            className="bg-red-500" 
+                            style={{ width: `${(selectedData.incorrectAnswers / selectedData.totalQuestions) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="pt-4 border-t">
+                        <div className="text-sm font-medium mb-2">Performance Level</div>
+                        <Badge className={`${getPerformanceColor(selectedData.performanceLevel)} px-3 py-1`}>
+                          {getPerformanceLabel(selectedData.performanceLevel)}
+                        </Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <BookOpen className="w-5 h-5 text-green-600" />
+                        Recommendations
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="p-4 bg-blue-50 rounded-lg">
+                          <div className="font-medium text-blue-800 mb-2">Suggestion</div>
+                          <div className="text-sm text-blue-700">
+                            {getRecommendation(selectedData)}
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          <div className="text-sm font-medium">Next Steps:</div>
+                          <ul className="text-sm text-gray-600 space-y-2">
+                            {selectedData.accuracy < 60 && (
+                              <li className="flex items-start gap-2">
+                                <span className="text-orange-500 mt-1">•</span>
+                                Focus on reviewing fundamentals for this difficulty level
+                              </li>
+                            )}
+                            {selectedData.accuracy >= 60 && selectedData.accuracy < 80 && (
+                              <li className="flex items-start gap-2">
+                                <span className="text-blue-500 mt-1">•</span>
+                                Practice consistently to improve accuracy
+                              </li>
+                            )}
+                            {selectedData.accuracy >= 80 && selectedData.accuracy < 90 && (
+                              <li className="flex items-start gap-2">
+                                <span className="text-green-500 mt-1">•</span>
+                                Focus on eliminating small mistakes for excellence
+                              </li>
+                            )}
+                            {selectedData.accuracy >= 90 && (
+                              <li className="flex items-start gap-2">
+                                <span className="text-green-600 mt-1">•</span>
+                                Consider advancing to the next difficulty level
+                              </li>
+                            )}
+                            <li className="flex items-start gap-2">
+                              <span className="text-purple-500 mt-1">•</span>
+                              Review incorrect answers to understand patterns
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-gray-500 mt-1">•</span>
+                              Practice with different study modes for variety
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              );
+            })()}
+
+            {/* Countries Performance for this difficulty level */}
+            {difficultyDetails && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="w-5 h-5 text-purple-600" />
+                    Countries Needing Attention
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {difficultyDetails.worstCountries?.length > 0 ? (
+                    <ScrollArea className="h-64">
+                      <div className="space-y-3">
+                        {difficultyDetails.worstCountries.slice(0, 10).map((country: any, index: number) => {
+                          const countryData = countries.find(c => c.code === country.countryCode);
+                          return (
+                            <div key={country.countryCode} className="flex items-center justify-between p-3 border rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-6 flex items-center justify-center bg-gray-100 rounded text-xs font-medium">
+                                  #{index + 1}
+                                </div>
+                                <CountryFlag countryCode={country.countryCode} />
+                                <div>
+                                  <div className="font-medium">{countryData?.name || country.countryCode}</div>
+                                  <div className="text-sm text-gray-600">
+                                    Capital: {countryData?.capital || 'Unknown'}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="text-right flex items-center gap-2">
+                                <Badge variant={getAccuracyBadgeVariant(country.accuracy)}>
+                                  {country.accuracy}%
+                                </Badge>
+                                <div className="text-xs text-gray-500">
+                                  {country.totalAttempts} attempts
+                                </div>
+                                <PronunciationButton 
+                                  countryName={countryData?.name || country.countryCode}
+                                  capitalName={countryData?.capital || ''}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </ScrollArea>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <Target className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                      <div className="text-lg font-medium mb-2">Great job!</div>
+                      <div className="text-sm">
+                        No countries need special attention at this difficulty level.
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </>
         )}
       </div>
     );
@@ -181,22 +458,33 @@ export function AccuracyDetails() {
                 className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer border-2 border-transparent hover:border-gray-200"
               >
                 <div className="flex items-center gap-3">
-                  <Badge className={difficultyColors[item.difficulty as keyof typeof difficultyColors]}>
-                    {difficultyLabels[item.difficulty as keyof typeof difficultyLabels]}
-                  </Badge>
+                  <div className="text-2xl">{getDifficultyIcon(item.difficulty)}</div>
                   <div className="text-left">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge className={difficultyColors[item.difficulty as keyof typeof difficultyColors]}>
+                        {difficultyLabels[item.difficulty as keyof typeof difficultyLabels]}
+                      </Badge>
+                      {item.totalQuestions > 0 && (
+                        <Badge className={`${getPerformanceColor(item.performanceLevel)} text-xs`}>
+                          {getPerformanceLabel(item.performanceLevel)}
+                        </Badge>
+                      )}
+                    </div>
                     <div className="text-sm text-gray-600">
                       {item.totalQuestions > 0 
-                        ? `${item.totalQuestions} questions answered`
+                        ? `${item.correctAnswers}/${item.totalQuestions} correct (${item.incorrectAnswers} wrong)`
                         : "No questions answered yet"
                       }
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="text-right">
+                  <div className="text-right min-w-[80px]">
                     <div className={`text-2xl font-bold ${getAccuracyColor(item.accuracy)}`}>
                       {item.totalQuestions > 0 ? `${item.accuracy}%` : "—"}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {item.totalQuestions > 0 ? "accuracy" : "start practicing"}
                     </div>
                   </div>
                   <div className="w-32">
@@ -204,6 +492,10 @@ export function AccuracyDetails() {
                       value={item.totalQuestions > 0 ? item.accuracy : 0} 
                       className="h-3"
                     />
+                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                      <span>0%</span>
+                      <span>100%</span>
+                    </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-gray-400" />
                 </div>
