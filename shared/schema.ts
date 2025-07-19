@@ -1,20 +1,35 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb, varchar, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Session storage table for Replit Auth
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// User storage table for Replit Auth
 export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  email: text("email").notNull().unique(),
+  id: varchar("id").primaryKey().notNull(),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
   currentStreak: integer("current_streak").default(0),
   totalStudyTime: integer("total_study_time").default(0), // in minutes
   excludedCountries: text("excluded_countries").array().default([]), // array of country codes to exclude from practice
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const userProgress = pgTable("user_progress", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: varchar("user_id").notNull(),
   countryCode: text("country_code").notNull(),
   masteryLevel: integer("mastery_level").default(0), // 0-100
   correctAnswers: integer("correct_answers").default(0),
@@ -28,7 +43,7 @@ export const userProgress = pgTable("user_progress", {
 
 export const quizSessions = pgTable("quiz_sessions", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: varchar("user_id").notNull(),
   mode: text("mode").notNull(), // 'quiz', 'flashcards', 'typing', 'map'
   difficulty: text("difficulty").notNull(), // 'beginner', 'intermediate', 'expert'
   questionsAsked: integer("questions_asked").default(0),
@@ -41,7 +56,7 @@ export const quizSessions = pgTable("quiz_sessions", {
 
 export const achievements = pgTable("achievements", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: varchar("user_id").notNull(),
   type: text("type").notNull(), // 'streak', 'mastery', 'speed', etc.
   title: text("title").notNull(),
   description: text("description").notNull(),
@@ -50,7 +65,7 @@ export const achievements = pgTable("achievements", {
 
 export const dailyStats = pgTable("daily_stats", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: varchar("user_id").notNull(),
   date: text("date").notNull(), // YYYY-MM-DD format
   countriesLearned: integer("countries_learned").default(0),
   questionsAnswered: integer("questions_answered").default(0),
@@ -60,7 +75,7 @@ export const dailyStats = pgTable("daily_stats", {
 
 export const studyGoals = pgTable("study_goals", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: varchar("user_id").notNull(),
   period: text("period").notNull(), // 'daily', 'weekly', 'monthly'
   targetMinutes: integer("target_minutes").notNull(),
   isActive: boolean("is_active").default(true),
@@ -70,17 +85,21 @@ export const studyGoals = pgTable("study_goals", {
 // New table for dynamic difficulty recommendations
 export const difficultyRecommendations = pgTable("difficulty_recommendations", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: varchar("user_id").notNull(),
   recommendedCountries: text("recommended_countries").array().default([]), // country codes
   difficultyLevel: text("difficulty_level").notNull(), // calculated dynamic difficulty
   confidenceScore: integer("confidence_score").default(0), // 0-100, how confident we are in this recommendation
   lastUpdated: timestamp("last_updated").defaultNow(),
 });
 
-// Insert schemas
+// Insert schemas for Replit Auth
+export const upsertUserSchema = createInsertSchema(users);
+export type UpsertUser = typeof users.$inferInsert;
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
+  updatedAt: true,
 });
 
 export const insertUserProgressSchema = createInsertSchema(userProgress).omit({

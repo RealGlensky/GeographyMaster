@@ -1,27 +1,46 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertQuizSessionSchema, insertUserProgressSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Get current user (demo user with ID 1)
-  app.get("/api/user", async (req, res) => {
+  // Temporarily disable authentication for development
+  // await setupAuth(app);
+
+  // Demo user for development - create if doesn't exist
+  const ensureDemoUser = async () => {
+    const demoUserId = "demo-user-1";
+    let user = await storage.getUser(demoUserId);
+    if (!user) {
+      user = await storage.upsertUser({
+        id: demoUserId,
+        email: "demo@example.com",
+        firstName: "Demo",
+        lastName: "User",
+        profileImageUrl: null,
+      });
+    }
+    return user;
+  };
+
+  // Auth routes - get current user (demo mode)
+  app.get('/api/auth/user', async (req: any, res) => {
     try {
-      const user = await storage.getUser(1);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
+      const user = await ensureDemoUser();
       res.json(user);
     } catch (error) {
-      res.status(500).json({ message: "Failed to get user" });
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
     }
   });
 
   // Get user statistics
-  app.get("/api/user/stats", async (req, res) => {
+  app.get("/api/user/stats", async (req: any, res) => {
     try {
-      const stats = await storage.getUserStats(1);
+      const userId = "demo-user-1";
+      const stats = await storage.getUserStats(userId);
       res.json(stats);
     } catch (error) {
       res.status(500).json({ message: "Failed to get user stats" });
@@ -29,9 +48,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user progress
-  app.get("/api/user/progress", async (req, res) => {
+  app.get("/api/user/progress", async (req: any, res) => {
     try {
-      const progress = await storage.getUserProgress(1);
+      const userId = "demo-user-1";
+      const progress = await storage.getUserProgress(userId);
       res.json(progress);
     } catch (error) {
       res.status(500).json({ message: "Failed to get user progress" });
@@ -39,9 +59,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get review items
-  app.get("/api/user/review", async (req, res) => {
+  app.get("/api/user/review", async (req: any, res) => {
     try {
-      const reviewItems = await storage.getReviewItems(1);
+      const userId = "demo-user-1";
+      const reviewItems = await storage.getReviewItems(userId);
       res.json(reviewItems);
     } catch (error) {
       res.status(500).json({ message: "Failed to get review items" });
@@ -49,9 +70,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user achievements
-  app.get("/api/user/achievements", async (req, res) => {
+  app.get("/api/user/achievements", async (req: any, res) => {
     try {
-      const achievements = await storage.getUserAchievements(1);
+      const userId = "demo-user-1";
+      const achievements = await storage.getUserAchievements(userId);
       res.json(achievements);
     } catch (error) {
       res.status(500).json({ message: "Failed to get achievements" });
@@ -59,9 +81,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get detailed mastery data for dashboard
-  app.get("/api/user/mastery-details", async (req, res) => {
+  app.get("/api/user/mastery-details", async (req: any, res) => {
     try {
-      const masteryDetails = await storage.getMasteryDetails(1);
+      const userId = "demo-user-1";
+      const masteryDetails = await storage.getMasteryDetails(userId);
       res.json(masteryDetails);
     } catch (error) {
       res.status(500).json({ message: "Failed to get mastery details" });
@@ -69,10 +92,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get streak calendar data
-  app.get("/api/user/streak-calendar", async (req, res) => {
+  app.get("/api/user/streak-calendar", async (req: any, res) => {
     try {
+      const userId = "demo-user-1";
       const monthKey = req.query.monthKey as string;
-      const streakData = await storage.getStreakCalendar(1, monthKey);
+      const streakData = await storage.getStreakCalendar(userId, monthKey);
       res.json(streakData);
     } catch (error) {
       res.status(500).json({ message: "Failed to get streak calendar" });
@@ -80,10 +104,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get detailed accuracy data
-  app.get("/api/user/accuracy-details", async (req, res) => {
+  app.get("/api/user/accuracy-details", async (req: any, res) => {
     try {
-      const { difficulty } = req.query;
-      const accuracyDetails = await storage.getAccuracyDetails(1, difficulty as string);
+      const userId = "demo-user-1";
+      const accuracyDetails = await storage.getAccuracyDetails(userId);
       res.json(accuracyDetails);
     } catch (error) {
       res.status(500).json({ message: "Failed to get accuracy details" });
@@ -91,11 +115,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get study time breakdown
-  app.get("/api/user/study-time-breakdown", async (req, res) => {
+  app.get("/api/user/study-time-breakdown", async (req: any, res) => {
     try {
+      const userId = "demo-user-1";
       const { period } = req.query;
       const timePeriod = period as string || 'daily';
-      const timeBreakdown = await storage.getStudyTimeBreakdown(1, timePeriod);
+      const timeBreakdown = await storage.getStudyTimeBreakdown(userId, timePeriod);
       res.json(timeBreakdown);
     } catch (error) {
       res.status(500).json({ message: "Failed to get study time breakdown" });
@@ -103,13 +128,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update excluded countries
-  app.patch("/api/user/excluded-countries", async (req, res) => {
+  app.patch("/api/user/excluded-countries", async (req: any, res) => {
     try {
+      const userId = "demo-user-1";
       const { excludedCountries } = req.body;
       if (!Array.isArray(excludedCountries) || !excludedCountries.every(code => typeof code === 'string')) {
         return res.status(400).json({ message: "excludedCountries must be an array of strings" });
       }
-      await storage.updateExcludedCountries(1, excludedCountries);
+      await storage.updateExcludedCountries(userId, excludedCountries);
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ message: "Failed to update excluded countries" });
@@ -117,11 +143,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create quiz session
-  app.post("/api/quiz/start", async (req, res) => {
+  app.post("/api/quiz/start", async (req: any, res) => {
     try {
+      const userId = "demo-user-1";
       const data = insertQuizSessionSchema.parse({
         ...req.body,
-        userId: 1,
+        userId,
       });
       const session = await storage.createQuizSession(data);
       res.json(session);
@@ -134,7 +161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update quiz session
-  app.patch("/api/quiz/:sessionId", async (req, res) => {
+  app.patch("/api/quiz/:sessionId", async (req: any, res) => {
     try {
       const sessionId = parseInt(req.params.sessionId);
       await storage.updateQuizSession(sessionId, req.body);
@@ -145,16 +172,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Submit quiz answer
-  app.post("/api/quiz/:sessionId/answer", async (req, res) => {
+  app.post("/api/quiz/:sessionId/answer", async (req: any, res) => {
     try {
+      const userId = "demo-user-1";
       const { countryCode, correct } = req.body;
-      await storage.updateProgress(1, countryCode, correct);
+      await storage.updateProgress(userId, countryCode, correct);
       
       // Update daily stats
       const today = new Date().toISOString().split('T')[0];
-      const currentStats = await storage.getDailyStats(1, today);
+      const currentStats = await storage.getDailyStats(userId, today);
       
-      await storage.updateDailyStats(1, today, {
+      await storage.updateDailyStats(userId, today, {
         questionsAnswered: (currentStats?.questionsAnswered || 0) + 1,
         questionsCorrect: (currentStats?.questionsCorrect || 0) + (correct ? 1 : 0),
       });
@@ -166,12 +194,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get daily stats
-  app.get("/api/user/daily-stats", async (req, res) => {
+  app.get("/api/user/daily-stats", async (req: any, res) => {
     try {
+      const userId = "demo-user-1";
       const today = new Date().toISOString().split('T')[0];
-      const stats = await storage.getDailyStats(1, today);
+      const stats = await storage.getDailyStats(userId, today);
       res.json(stats || {
-        countriesLearned: 3,
+        countriesLearned: 0,
         questionsAnswered: 0,
         questionsCorrect: 0,
         studyTime: 0,
@@ -182,20 +211,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Study goals routes
-  app.get("/api/user/study-goals", async (req, res) => {
+  app.get("/api/user/study-goals", async (req: any, res) => {
     try {
-      const goals = await storage.getUserStudyGoals(1);
+      const userId = "demo-user-1";
+      const goals = await storage.getUserStudyGoals(userId);
       res.json(goals);
     } catch (error) {
       res.status(500).json({ message: "Failed to get study goals" });
     }
   });
 
-  app.post("/api/user/study-goals", async (req, res) => {
+  app.post("/api/user/study-goals", async (req: any, res) => {
     try {
+      const userId = "demo-user-1";
       const { period, targetMinutes } = req.body;
       const goal = await storage.setStudyGoal({
-        userId: 1,
+        userId,
         period,
         targetMinutes,
         isActive: true,
@@ -206,7 +237,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/user/study-goals/:goalId", async (req, res) => {
+  app.put("/api/user/study-goals/:goalId", async (req: any, res) => {
     try {
       const goalId = parseInt(req.params.goalId);
       const updates = req.body;
@@ -217,7 +248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/user/study-goals/:goalId", async (req, res) => {
+  app.delete("/api/user/study-goals/:goalId", async (req: any, res) => {
     try {
       const goalId = parseInt(req.params.goalId);
       await storage.deleteStudyGoal(goalId);
@@ -228,27 +259,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dynamic difficulty routes
-  app.get("/api/user/recommended-countries", async (req, res) => {
+  app.get("/api/user/recommended-countries", async (req: any, res) => {
     try {
+      const userId = "demo-user-1";
       const difficultyLevel = (req.query.level || 'adaptive') as any;
       const count = parseInt(req.query.count as string) || 10;
       
-      const recommendations = await storage.getRecommendedCountries(1, difficultyLevel, count);
+      const recommendations = await storage.getRecommendedCountries(userId, difficultyLevel, count);
       res.json(recommendations);
     } catch (error) {
       res.status(500).json({ message: "Failed to get recommended countries" });
     }
   });
 
-  app.post("/api/user/update-progress-metrics", async (req, res) => {
+  app.post("/api/user/update-progress-metrics", async (req: any, res) => {
     try {
+      const userId = "demo-user-1";
       const { countryCode, isCorrect, responseTime, updates } = req.body;
       
       if (updates) {
-        await storage.updateProgressWithMetrics(1, countryCode, updates);
+        await storage.updateProgressWithMetrics(userId, countryCode, updates);
       } else {
         // Legacy fallback
-        await storage.updateProgress(1, countryCode, isCorrect);
+        await storage.updateProgress(userId, countryCode, isCorrect);
       }
       
       res.json({ success: true });
@@ -257,18 +290,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/user/difficulty-recommendation", async (req, res) => {
+  app.get("/api/user/difficulty-recommendation", async (req: any, res) => {
     try {
-      const recommendation = await storage.getDifficultyRecommendation(1);
+      const userId = "demo-user-1";
+      const recommendation = await storage.getDifficultyRecommendation(userId);
       res.json(recommendation);
     } catch (error) {
       res.status(500).json({ message: "Failed to get difficulty recommendation" });
     }
   });
 
-  app.post("/api/user/difficulty-recommendation", async (req, res) => {
+  app.post("/api/user/difficulty-recommendation", async (req: any, res) => {
     try {
-      const recommendation = await storage.updateDifficultyRecommendation(1, req.body);
+      const userId = "demo-user-1";
+      const recommendation = await storage.updateDifficultyRecommendation(userId, req.body);
       res.json(recommendation);
     } catch (error) {
       res.status(500).json({ message: "Failed to update difficulty recommendation" });
