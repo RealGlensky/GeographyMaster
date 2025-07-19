@@ -29,7 +29,7 @@ export default function AnalyticsDashboard() {
   };
 
   const handleBackToMain = () => {
-    window.location.href = '/dashboard';
+    window.location.href = '/';
   };
 
   if (activeView) {
