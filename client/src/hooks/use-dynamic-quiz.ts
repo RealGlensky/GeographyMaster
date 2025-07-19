@@ -127,10 +127,18 @@ export function useDynamicQuiz({
       responseTime: number;
       updates?: any;
     }) => {
-      return apiRequest('/api/user/update-progress-metrics', {
+      const response = await fetch('/api/user/update-progress-metrics', {
         method: 'POST',
-        body: { countryCode, isCorrect, responseTime, updates }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ countryCode, isCorrect, responseTime, updates }),
+        credentials: 'include'
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       // Invalidate related queries to refresh data
@@ -150,6 +158,11 @@ export function useDynamicQuiz({
     const questions = generateQuestions(recommendedCountries);
     console.log(`Starting Smart Quiz with ${questions.length} questions in ${difficultyLevel} mode`);
     
+    if (questions.length === 0) {
+      console.error('No questions generated from recommended countries');
+      return;
+    }
+    
     // Create quiz session
     const sessionData = {
       userId: 1, // Demo user
@@ -162,11 +175,22 @@ export function useDynamicQuiz({
     };
 
     try {
-      const session = await apiRequest('/api/quiz-sessions', {
+      const response = await fetch('/api/quiz-sessions', {
         method: 'POST',
-        body: sessionData
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(sessionData),
+        credentials: 'include'
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const session = await response.json();
 
+      console.log('Quiz session created:', session);
+      console.log('First question:', questions[0]);
+      
       setQuizState({
         sessionId: session.id,
         currentQuestion: 0,
@@ -183,6 +207,8 @@ export function useDynamicQuiz({
         ) || null,
         questionStartTime: Date.now(),
       });
+      
+      console.log('Quiz state updated, ready to display first question');
     } catch (error) {
       console.error('Failed to start quiz session:', error);
     }
@@ -224,13 +250,15 @@ export function useDynamicQuiz({
 
         // Update session as completed
         if (quizState.sessionId) {
-          apiRequest(`/api/quiz-sessions/${quizState.sessionId}`, {
+          fetch(`/api/quiz-sessions/${quizState.sessionId}`, {
             method: 'PATCH',
-            body: {
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
               questionsCorrect: newScore,
               completed: true,
               completedAt: new Date().toISOString(),
-            }
+            }),
+            credentials: 'include'
           });
         }
       } else {
