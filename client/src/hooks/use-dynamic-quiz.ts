@@ -51,7 +51,6 @@ export function useDynamicQuiz({
   const { data: recommendedCountries, isLoading: isLoadingRecommendations, error } = useQuery({
     queryKey: ['/api/user/recommended-countries', difficultyLevel, questionCount],
     queryFn: async () => {
-      console.log('Fetching recommended countries for:', difficultyLevel, 'count:', questionCount * 2);
       const response = await fetch(`/api/user/recommended-countries?level=${difficultyLevel}&count=${questionCount * 2}`, {
         credentials: 'include'
       });
@@ -61,7 +60,6 @@ export function useDynamicQuiz({
       }
       
       const result = await response.json() as CountryWithDynamicDifficulty[];
-      console.log('Query result:', result?.length, 'countries');
       return result;
     },
     staleTime: 30000, // Prevent too frequent refetches
@@ -144,14 +142,13 @@ export function useDynamicQuiz({
 
   // Start quiz
   const startQuiz = useCallback(async () => {
-    console.log('startQuiz called, recommendedCountries:', recommendedCountries?.length);
     if (!recommendedCountries || recommendedCountries.length === 0) {
-      console.log('No recommended countries available');
+      console.error('Cannot start quiz: No recommended countries available');
       return;
     }
 
     const questions = generateQuestions(recommendedCountries);
-    console.log('Generated questions:', questions.length);
+    console.log(`Starting Smart Quiz with ${questions.length} questions in ${difficultyLevel} mode`);
     
     // Create quiz session
     const sessionData = {
@@ -298,15 +295,12 @@ export function useDynamicQuiz({
     });
   }, [questionCount, timePerQuestion]);
 
-  // Debug logging (only when values change)
-  React.useEffect(() => {
-    console.log('useDynamicQuiz state:', {
-      difficultyLevel,
-      isLoadingRecommendations,
-      recommendedCountriesLength: recommendedCountries?.length,
-      canStart: !isLoadingRecommendations && recommendedCountries && recommendedCountries.length > 0
-    });
-  }, [difficultyLevel, isLoadingRecommendations, recommendedCountries?.length]);
+  // Clean up debugging when data loads successfully
+  useEffect(() => {
+    if (recommendedCountries && recommendedCountries.length > 0) {
+      console.log(`Smart Quiz ready: ${recommendedCountries.length} countries loaded for ${difficultyLevel} mode`);
+    }
+  }, [recommendedCountries, difficultyLevel]);
 
   return {
     ...quizState,

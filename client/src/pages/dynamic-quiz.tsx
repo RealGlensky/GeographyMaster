@@ -38,22 +38,16 @@ export default function DynamicQuizPage() {
   });
 
   const handleStart = () => {
-    console.log('handleStart called, canStart:', canStart, 'isLoadingRecommendations:', isLoadingRecommendations, 'recommendedCountriesCount:', recommendedCountriesCount);
     setHasStarted(true);
     startQuiz();
   };
 
-  // Debug log to see what's happening with the quiz state (only log once per render cycle)
+  // Clean console debug info - only log meaningful events
   React.useEffect(() => {
-    console.log('Dynamic Quiz Debug:', {
-      selectedDifficulty,
-      hasStarted,
-      isLoadingRecommendations,
-      canStart,
-      recommendedCountriesCount,
-      difficultyLevel
-    });
-  }, [selectedDifficulty, hasStarted, isLoadingRecommendations, canStart, recommendedCountriesCount, difficultyLevel]);
+    if (!isLoadingRecommendations && canStart) {
+      console.log(`Smart Quiz ready - ${recommendedCountriesCount} countries available for ${difficultyLevel} mode`);
+    }
+  }, [isLoadingRecommendations, canStart, recommendedCountriesCount, difficultyLevel]);
 
   const handleRestart = () => {
     setHasStarted(false);
