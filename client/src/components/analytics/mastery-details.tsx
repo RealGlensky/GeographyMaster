@@ -173,14 +173,14 @@ export function MasteryDetails() {
                             <span className="text-xs text-blue-600">Keep practicing</span>
                           )}
                         </div>
-                        <div className="relative">
+                        <div className="relative w-full">
                           <Progress 
                             value={country.masteryLevel} 
                             className="w-full h-3"
                           />
                           {/* Mastery threshold indicator line */}
                           <div 
-                            className="absolute top-0 bottom-0 w-0.5 bg-green-600 opacity-70"
+                            className="absolute top-1/2 -translate-y-1/2 w-0.5 h-2 bg-green-600 opacity-80"
                             style={{ left: '85%' }}
                           />
                         </div>
