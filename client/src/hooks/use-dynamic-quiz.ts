@@ -37,7 +37,7 @@ interface UseDynamicQuizOptions {
 export function useDynamicQuiz({ 
   mode, 
   difficultyLevel, 
-  questionCount = 10, 
+  questionCount = 20, 
   timePerQuestion = 30 
 }: UseDynamicQuizOptions) {
   const queryClient = useQueryClient();

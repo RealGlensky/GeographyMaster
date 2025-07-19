@@ -33,7 +33,7 @@ export default function DynamicQuizPage() {
   } = useDynamicQuiz({
     mode: "quiz",
     difficultyLevel: selectedDifficulty,
-    questionCount: 10,
+    questionCount: 20,
     timePerQuestion: 30,
   });
 
