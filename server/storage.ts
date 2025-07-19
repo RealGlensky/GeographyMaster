@@ -110,17 +110,20 @@ export class MemStorage implements IStorage {
       });
     });
 
-    // Add sample quiz sessions
-    for (let i = 0; i < 10; i++) {
+    // Add sample quiz sessions with more variety and specific data for demonstration
+    const modes = ['quiz', 'flashcards', 'typing', 'map'];
+    const difficulties = ['beginner', 'easy', 'intermediate', 'advanced', 'expert'];
+    
+    for (let i = 0; i < 25; i++) {
       const sessionDate = new Date();
-      sessionDate.setDate(sessionDate.getDate() - i);
+      sessionDate.setDate(sessionDate.getDate() - Math.floor(i / 2));
       
       this.quizSessions.set(this.sessionId++, {
         id: this.sessionId,
         userId,
-        mode: ['quiz', 'flashcards', 'typing'][Math.floor(Math.random() * 3)],
-        difficulty: ['beginner', 'intermediate', 'expert'][Math.floor(Math.random() * 3)],
-        questionsAsked: 10,
+        mode: modes[Math.floor(Math.random() * modes.length)],
+        difficulty: difficulties[Math.floor(Math.random() * difficulties.length)],
+        questionsAsked: Math.floor(Math.random() * 15) + 5, // 5-20 questions
         questionsCorrect: Math.floor(Math.random() * 8) + 2,
         timeSpent: Math.floor(Math.random() * 600) + 300, // 5-15 minutes
         completed: true,
