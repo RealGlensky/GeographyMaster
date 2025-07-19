@@ -4,9 +4,23 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertQuizSessionSchema, insertUserProgressSchema } from "@shared/schema";
 import { z } from "zod";
+import bcrypt from "bcryptjs";
+import session from "express-session";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Temporarily disable authentication for development
+  // Add session middleware
+  app.use(session({
+    secret: process.env.SESSION_SECRET || 'development-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false, // Set to true in production with HTTPS
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    },
+  }));
+
+  // Temporarily disable Replit authentication for development
   // await setupAuth(app);
 
   // Demo user for development - create if doesn't exist
@@ -25,14 +39,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return user;
   };
 
-  // Auth routes - get current user (demo mode)
+  // Auth routes - get current user
   app.get('/api/auth/user', async (req: any, res) => {
     try {
+      // Check if user is logged in via session
+      if (req.session?.userId) {
+        const user = await storage.getUser(req.session.userId);
+        if (user) {
+          return res.json(user);
+        }
+      }
+      
+      // Fallback to demo user for development
       const user = await ensureDemoUser();
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Registration endpoint
+  app.post('/api/auth/register', async (req: any, res) => {
+    try {
+      const { username, email, password, firstName, lastName } = req.body;
+
+      // Validate required fields
+      if (!username || !email || !password || !firstName || !lastName) {
+        return res.status(400).json({ message: "All fields are required" });
+      }
+
+      // Check if user already exists
+      const existingUserByEmail = await storage.getUserByEmail(email);
+      if (existingUserByEmail) {
+        return res.status(400).json({ message: "Email already registered" });
+      }
+
+      const existingUserByUsername = await storage.getUserByUsername(username);
+      if (existingUserByUsername) {
+        return res.status(400).json({ message: "Username already taken" });
+      }
+
+      // Create new user
+      const newUser = await storage.createUser({
+        username,
+        email,
+        password,
+        firstName,
+        lastName,
+        profileImageUrl: null,
+      });
+
+      // Log in the user
+      req.session.userId = newUser.id;
+
+      // Return user without password
+      const { password: _, ...userWithoutPassword } = newUser;
+      res.status(201).json(userWithoutPassword);
+    } catch (error) {
+      console.error("Registration error:", error);
+      res.status(500).json({ message: "Failed to create account" });
+    }
+  });
+
+  // Login endpoint
+  app.post('/api/auth/login', async (req: any, res) => {
+    try {
+      const { usernameOrEmail, password } = req.body;
+
+      if (!usernameOrEmail || !password) {
+        return res.status(400).json({ message: "Username/email and password are required" });
+      }
+
+      // Find user by username or email
+      const user = await storage.getUserByUsernameOrEmail(usernameOrEmail);
+      if (!user) {
+        return res.status(401).json({ message: "Invalid username/email or password" });
+      }
+
+      // Check password
+      if (!user.password) {
+        return res.status(401).json({ message: "Invalid username/email or password" });
+      }
+
+      const isValidPassword = await bcrypt.compare(password, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ message: "Invalid username/email or password" });
+      }
+
+      // Log in the user
+      req.session.userId = user.id;
+
+      // Return user without password
+      const { password: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Failed to login" });
     }
   });
 
@@ -310,10 +413,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Logout route for demo mode
+  // Logout route
   app.get("/api/logout", async (req: any, res) => {
-    // In demo mode, just redirect to home page
-    res.redirect("/");
+    if (req.session) {
+      req.session.destroy((err: any) => {
+        if (err) {
+          console.error("Error destroying session:", err);
+        }
+        res.clearCookie('connect.sid'); // Clear session cookie
+        res.redirect("/");
+      });
+    } else {
+      res.redirect("/");
+    }
   });
 
   const httpServer = createServer(app);

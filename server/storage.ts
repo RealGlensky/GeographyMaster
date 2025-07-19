@@ -7,14 +7,17 @@ import {
   type StudyMode, type Difficulty, type DynamicDifficultyLevel, type CountryWithDynamicDifficulty
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, or } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 
 export interface IStorage {
-  // User methods (for Replit Auth)
+  // User methods (for authentication)
   getUser(id: string): Promise<User | undefined>;
-  upsertUser(user: UpsertUser): Promise<User>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByUsernameOrEmail(usernameOrEmail: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  upsertUser(user: UpsertUser): Promise<User>;
   updateUserStreak(userId: string, streak: number): Promise<void>;
   updateStudyTime(userId: string, minutes: number): Promise<void>;
   updateExcludedCountries(userId: string, excludedCountries: string[]): Promise<void>;
@@ -100,12 +103,30 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
+  async getUserByUsernameOrEmail(usernameOrEmail: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(
+      or(eq(users.username, usernameOrEmail), eq(users.email, usernameOrEmail))
+    );
+    return user;
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
+    // Hash password if provided
+    const userData = { ...insertUser };
+    if (userData.password) {
+      userData.password = await bcrypt.hash(userData.password, 12);
+    }
+
     const [user] = await db
       .insert(users)
       .values({
-        ...insertUser,
-        id: Date.now().toString(), // Simple ID generation for demo
+        ...userData,
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9), // Simple ID generation
       })
       .returning();
     return user;

@@ -1,12 +1,9 @@
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Globe2, Target, TrendingUp, Users } from "lucide-react";
 
 export default function Landing() {
-  const handleLogin = () => {
-    window.location.href = "/api/login";
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Header */}
@@ -17,9 +14,9 @@ export default function Landing() {
               <Globe2 className="w-8 h-8 text-blue-600" />
               <h1 className="text-2xl font-bold text-gray-900">WorldCap</h1>
             </div>
-            <Button onClick={handleLogin} size="lg">
-              Get Started
-            </Button>
+            <Link href="/login">
+              <Button size="lg">Get Started</Button>
+            </Link>
           </div>
         </div>
       </header>
@@ -34,9 +31,11 @@ export default function Landing() {
             Learn country capitals through interactive quizzes, flashcards, and personalized learning experiences. 
             Track your progress and master geography with our AI-powered adaptive system.
           </p>
-          <Button onClick={handleLogin} size="lg" className="text-lg px-8 py-4">
-            Start Learning Now
-          </Button>
+          <Link href="/login">
+            <Button size="lg" className="text-lg px-8 py-4">
+              Start Learning Now
+            </Button>
+          </Link>
         </div>
 
         {/* Features Grid */}
@@ -134,9 +133,18 @@ export default function Landing() {
           <p className="text-xl text-gray-600 mb-8">
             Join thousands of learners who have improved their geography knowledge with WorldCap.
           </p>
-          <Button onClick={handleLogin} size="lg" className="text-lg px-8 py-4">
-            Start Your Journey
-          </Button>
+          <div className="flex items-center justify-center gap-4">
+            <Link href="/register">
+              <Button size="lg" className="text-lg px-8 py-4">
+                Start Your Journey
+              </Button>
+            </Link>
+            <Link href="/login">
+              <Button variant="outline" size="lg" className="text-lg px-8 py-4">
+                Sign In
+              </Button>
+            </Link>
+          </div>
         </div>
       </main>
     </div>

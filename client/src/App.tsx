@@ -14,6 +14,8 @@ import TypingPractice from "@/pages/typing-practice";
 import MapChallenge from "@/pages/map-challenge";
 import Profile from "@/pages/profile";
 import AnalyticsDashboard from "@/pages/analytics-dashboard";
+import LoginPage from "@/pages/login";
+import RegisterPage from "@/pages/register";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -21,6 +23,8 @@ function Router() {
 
   return (
     <Switch>
+      <Route path="/login" component={LoginPage} />
+      <Route path="/register" component={RegisterPage} />
       {!isAuthenticated ? (
         <Route path="/" component={Landing} />
       ) : (
@@ -52,9 +56,7 @@ function App() {
 }
 
 function AuthenticatedApp() {
-  // Temporarily disable authentication to get the app working
-  const isAuthenticated = true; // Force authenticated for now
-  const isLoading = false;
+  const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
