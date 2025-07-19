@@ -72,6 +72,7 @@ export function GoogleMapsWorld({
   const [map, setMap] = useState<any>(null);
   const [markers, setMarkers] = useState<any[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const markersRef = useRef<Map<string, any>>(new Map()); // Stable marker reference
 
   // Filter available countries
   const availableCountries = countries.filter(country => 
@@ -153,92 +154,40 @@ export function GoogleMapsWorld({
     setMap(googleMap);
   }, [isLoaded]);
 
-  // Update markers with debouncing to reduce jumpiness
+  // Initialize markers once and keep them stable
   useEffect(() => {
     if (!map || !window.google) return;
 
-    // Debounce marker updates to prevent rapid re-rendering
-    const timeoutId = setTimeout(() => {
-      // Clear existing markers
-      markers.forEach(marker => marker.setMap(null));
-
-      const newMarkers = availableCountries.map(country => {
+    // Create markers for all available countries once
+    availableCountries.forEach(country => {
       const coordinates = COUNTRY_COORDINATES[country.code];
-      if (!coordinates) return null;
-
-      const isTarget = targetCountry === country.code;
-      const isSelected = selectedCountry === country.code;
-      const isHovered = hoveredCountry === country.code;
-
-      // Determine if marker should be visible based on visibility setting
-      let shouldShowMarker = false;
-      if (markerVisibility === 'always') {
-        shouldShowMarker = true;
-      } else if (markerVisibility === 'hover') {
-        shouldShowMarker = isHovered || isSelected || (showResult && isTarget);
-      } else if (markerVisibility === 'never') {
-        shouldShowMarker = showResult && isTarget; // Only show when revealing answer
-      }
-
-
-
-      if (!shouldShowMarker) {
-        return null; // Don't create marker
-      }
-
-      let icon = {
-        path: window.google.maps.SymbolPath.CIRCLE,
-        scale: 8,
-        fillColor: '#3b82f6',
-        fillOpacity: 0.6,
-        strokeWeight: 1,
-        strokeColor: '#ffffff'
-      };
-
-      if (showResult && isTarget && isCorrect) {
-        icon.fillColor = '#10b981';
-        icon.strokeColor = '#ffffff';
-        icon.scale = 12;
-        icon.fillOpacity = 0.9;
-        icon.strokeWeight = 2;
-      } else if (showResult && isSelected && !isCorrect) {
-        icon.fillColor = '#ef4444';
-        icon.strokeColor = '#ffffff';
-        icon.scale = 12;
-        icon.fillOpacity = 0.9;
-        icon.strokeWeight = 2;
-      } else if (isSelected) {
-        icon.fillColor = '#2563eb';
-        icon.strokeColor = '#ffffff';
-        icon.scale = 10;
-        icon.fillOpacity = 0.8;
-        icon.strokeWeight = 2;
-      } else if (isHovered) {
-        icon.fillColor = '#1d4ed8';
-        icon.strokeColor = '#ffffff';
-        icon.scale = 9;
-        icon.fillOpacity = 0.7;
-      }
+      if (!coordinates || markersRef.current.has(country.code)) return;
 
       const marker = new window.google.maps.Marker({
         position: { lat: coordinates.lat, lng: coordinates.lng },
-        map: map,
-        icon: icon,
+        map: null, // Initially not on map
+        icon: {
+          path: window.google.maps.SymbolPath.CIRCLE,
+          scale: 8,
+          fillColor: '#3b82f6',
+          fillOpacity: 0.6,
+          strokeWeight: 1,
+          strokeColor: '#ffffff'
+        },
         title: country.name,
-        zIndex: isSelected || isHovered || (showResult && isTarget) ? 2000 : 1000,
+        zIndex: 1000,
         clickable: true,
-        optimized: false // Prevent marker clustering that can cause blinking
+        optimized: false
       });
 
-      // Store country code for identification
+      // Store country code
       marker.countryCode = country.code;
 
-      // Add click listener
+      // Add event listeners
       marker.addListener('click', () => {
         onCountryClick?.(country.code);
       });
 
-      // Add hover listeners
       marker.addListener('mouseover', () => {
         onCountryHover?.(country.code);
       });
@@ -247,66 +196,92 @@ export function GoogleMapsWorld({
         onCountryHover?.(null);
       });
 
-      return marker;
-    }).filter(Boolean);
+      markersRef.current.set(country.code, marker);
+    });
 
-      setMarkers(newMarkers);
-    }, 300); // 300ms debounce to reduce blinking
+    // Clean up markers for countries no longer available
+    markersRef.current.forEach((marker, countryCode) => {
+      if (!availableCountries.find(c => c.code === countryCode)) {
+        marker.setMap(null);
+        markersRef.current.delete(countryCode);
+      }
+    });
 
-    return () => clearTimeout(timeoutId);
-  }, [map, availableCountries, markerVisibility, targetCountry, showResult]);
+    setMarkers(Array.from(markersRef.current.values()));
+  }, [map, availableCountries]);
 
-  // Separate effect for updating marker styles without recreating them
+  // Update marker visibility and styles without recreation
   useEffect(() => {
-    if (!markers.length) return;
-
-    markers.forEach(marker => {
-      const countryCode = marker.countryCode; // We stored country code
+    markersRef.current.forEach((marker, countryCode) => {
       const country = availableCountries.find(c => c.code === countryCode);
       if (!country) return;
 
-      const isTarget = targetCountry === country.code;
-      const isSelected = selectedCountry === country.code;
-      const isHovered = hoveredCountry === country.code;
+      const isTarget = targetCountry === countryCode;
+      const isSelected = selectedCountry === countryCode;
+      const isHovered = hoveredCountry === countryCode;
 
-      let icon = {
-        path: window.google.maps.SymbolPath.CIRCLE,
-        scale: 8,
-        fillColor: '#3b82f6',
-        fillOpacity: 0.6,
-        strokeWeight: 1,
-        strokeColor: '#ffffff'
-      };
-
-      if (showResult && isTarget && isCorrect) {
-        icon.fillColor = '#10b981';
-        icon.strokeColor = '#ffffff';
-        icon.scale = 12;
-        icon.fillOpacity = 0.9;
-        icon.strokeWeight = 2;
-      } else if (showResult && isSelected && !isCorrect) {
-        icon.fillColor = '#ef4444';
-        icon.strokeColor = '#ffffff';
-        icon.scale = 12;
-        icon.fillOpacity = 0.9;
-        icon.strokeWeight = 2;
-      } else if (isSelected) {
-        icon.fillColor = '#2563eb';
-        icon.strokeColor = '#ffffff';
-        icon.scale = 10;
-        icon.fillOpacity = 0.8;
-        icon.strokeWeight = 2;
-      } else if (isHovered) {
-        icon.fillColor = '#1d4ed8';
-        icon.strokeColor = '#ffffff';
-        icon.scale = 9;
-        icon.fillOpacity = 0.7;
+      // Determine visibility
+      let shouldShowMarker = false;
+      if (markerVisibility === 'always') {
+        shouldShowMarker = true;
+      } else if (markerVisibility === 'hover') {
+        shouldShowMarker = isHovered || isSelected || (showResult && isTarget);
+      } else if (markerVisibility === 'never') {
+        shouldShowMarker = showResult && isTarget;
       }
 
-      marker.setIcon(icon);
-      marker.setZIndex(isSelected || isHovered || (showResult && isTarget) ? 2000 : 1000);
+      // Show/hide marker
+      marker.setMap(shouldShowMarker ? map : null);
+
+      if (shouldShowMarker) {
+        // Update marker style
+        let icon = {
+          path: window.google.maps.SymbolPath.CIRCLE,
+          scale: 8,
+          fillColor: '#3b82f6',
+          fillOpacity: 0.6,
+          strokeWeight: 1,
+          strokeColor: '#ffffff'
+        };
+
+        if (showResult && isTarget && isCorrect) {
+          icon.fillColor = '#10b981';
+          icon.strokeColor = '#ffffff';
+          icon.scale = 12;
+          icon.fillOpacity = 0.9;
+          icon.strokeWeight = 2;
+        } else if (showResult && isSelected && !isCorrect) {
+          icon.fillColor = '#ef4444';
+          icon.strokeColor = '#ffffff';
+          icon.scale = 12;
+          icon.fillOpacity = 0.9;
+          icon.strokeWeight = 2;
+        } else if (isSelected) {
+          icon.fillColor = '#2563eb';
+          icon.strokeColor = '#ffffff';
+          icon.scale = 10;
+          icon.fillOpacity = 0.8;
+          icon.strokeWeight = 2;
+        } else if (isHovered) {
+          icon.fillColor = '#1d4ed8';
+          icon.strokeColor = '#ffffff';
+          icon.scale = 9;
+          icon.fillOpacity = 0.7;
+        }
+
+        marker.setIcon(icon);
+        marker.setZIndex(isSelected || isHovered || (showResult && isTarget) ? 2000 : 1000);
+      }
     });
-  }, [markers, selectedCountry, hoveredCountry, isCorrect]);
+  }, [map, markerVisibility, selectedCountry, hoveredCountry, targetCountry, showResult, isCorrect]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      markersRef.current.forEach(marker => marker.setMap(null));
+      markersRef.current.clear();
+    };
+  }, []);
 
   if (!isLoaded) {
     return (
