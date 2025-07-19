@@ -34,9 +34,22 @@ export function shuffleArray<T>(array: T[]): T[] {
 }
 
 export function generateQuizOptions(correctAnswer: string, allOptions: string[], count: number = 4): string[] {
-  const incorrectOptions = allOptions.filter(option => option !== correctAnswer);
+  // Filter out the correct answer and remove any empty/undefined values
+  const incorrectOptions = allOptions
+    .filter(option => option && option !== correctAnswer && option.trim().length > 0);
+  
+  // If we don't have enough incorrect options, repeat some to fill the requirement
   const shuffledIncorrect = shuffleArray(incorrectOptions);
-  const selectedIncorrect = shuffledIncorrect.slice(0, count - 1);
+  let selectedIncorrect = shuffledIncorrect.slice(0, count - 1);
+  
+  // Ensure we always have exactly count-1 incorrect options
+  while (selectedIncorrect.length < count - 1 && incorrectOptions.length > 0) {
+    const additionalOptions = shuffleArray(incorrectOptions).slice(0, (count - 1) - selectedIncorrect.length);
+    selectedIncorrect = [...selectedIncorrect, ...additionalOptions];
+  }
+  
+  // Take only the number we need
+  selectedIncorrect = selectedIncorrect.slice(0, count - 1);
   
   const options = [correctAnswer, ...selectedIncorrect];
   return shuffleArray(options);

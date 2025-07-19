@@ -8,7 +8,7 @@ import {
   CountryWithDynamicDifficulty,
   User 
 } from "@shared/schema";
-import { generateQuizOptions, shuffleArray } from "@/lib/utils";
+import { generateQuizOptions, shuffleArray, isTypingCorrect } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { updateProgressAfterAttempt } from "@shared/dynamic-difficulty";
 
@@ -32,13 +32,15 @@ interface UseDynamicQuizOptions {
   difficultyLevel: DynamicDifficultyLevel;
   questionCount?: number;
   timePerQuestion?: number;
+  quizMode?: 'multiple-choice' | 'typing';
 }
 
 export function useDynamicQuiz({ 
   mode, 
   difficultyLevel, 
   questionCount = 20, 
-  timePerQuestion = 30 
+  timePerQuestion = 30,
+  quizMode = 'multiple-choice'
 }: UseDynamicQuizOptions) {
   const queryClient = useQueryClient();
   
@@ -87,7 +89,7 @@ export function useDynamicQuiz({
   });
 
   // Generate questions from recommended countries
-  const generateQuestions = useCallback((countries: CountryWithDynamicDifficulty[]): QuizQuestion[] => {
+  const generateQuestions = useCallback((countries: CountryWithDynamicDifficulty[], quizMode: 'multiple-choice' | 'typing' = 'multiple-choice'): QuizQuestion[] => {
     if (!countries || countries.length === 0) return [];
     
     const shuffledCountries = shuffleArray(countries).slice(0, questionCount);
@@ -98,21 +100,27 @@ export function useDynamicQuiz({
       const isCountryToCapital = Math.random() > 0.5;
       
       if (isCountryToCapital) {
+        // Ensure we have at least 4 unique options for multiple choice
+        const options = quizMode === 'multiple-choice' ? 
+          generateQuizOptions(country.capital, allCapitals).slice(0, 4) : [];
         return {
           id: `${index}`,
           type: 'country-to-capital' as const,
           country: country.name,
           capital: country.capital,
-          options: generateQuizOptions(country.capital, allCapitals),
+          options: options,
           correctAnswer: country.capital,
         };
       } else {
+        // Ensure we have at least 4 unique options for multiple choice
+        const options = quizMode === 'multiple-choice' ? 
+          generateQuizOptions(country.name, allCountryNames).slice(0, 4) : [];
         return {
           id: `${index}`,
           type: 'capital-to-country' as const,
           country: country.name,
           capital: country.capital,
-          options: generateQuizOptions(country.name, allCountryNames),
+          options: options,
           correctAnswer: country.name,
         };
       }
@@ -155,8 +163,8 @@ export function useDynamicQuiz({
       return;
     }
 
-    const questions = generateQuestions(recommendedCountries);
-    console.log(`Starting Smart Quiz with ${questions.length} questions in ${difficultyLevel} mode`);
+    const questions = generateQuestions(recommendedCountries, quizMode);
+    console.log(`Starting Smart Quiz with ${questions.length} questions in ${difficultyLevel} mode (${quizMode})`);
     
     if (questions.length === 0) {
       console.error('No questions generated from recommended countries');
@@ -218,7 +226,10 @@ export function useDynamicQuiz({
   const submitAnswer = useCallback(async (answer: string) => {
     if (!quizState.currentQuestionData || !quizState.currentCountry) return;
 
-    const isCorrect = answer === quizState.currentQuestionData.correctAnswer;
+    // For typing mode, use fuzzy matching for correctness
+    const isCorrect = quizMode === 'typing' 
+      ? isTypingCorrect(answer, quizState.currentQuestionData.correctAnswer)
+      : answer === quizState.currentQuestionData.correctAnswer;
     const responseTime = quizState.questionStartTime ? Date.now() - quizState.questionStartTime : 0;
     
     // Update user progress with detailed metrics

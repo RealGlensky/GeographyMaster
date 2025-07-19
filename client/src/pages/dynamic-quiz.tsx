@@ -15,14 +15,17 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { DynamicDifficultySelector } from "@/components/dynamic-difficulty-selector";
+import { Input } from "@/components/ui/input";
 import { useDynamicQuiz } from "@/hooks/use-dynamic-quiz";
 import { DynamicDifficultyLevel } from "@shared/schema";
-import { Clock, Target, Brain, CheckCircle, XCircle, RotateCcw, ArrowLeft } from "lucide-react";
+import { Clock, Target, Brain, CheckCircle, XCircle, RotateCcw, ArrowLeft, Keyboard, MousePointer } from "lucide-react";
 
 export default function DynamicQuizPage() {
   const [, setLocation] = useLocation();
   const [selectedDifficulty, setSelectedDifficulty] = useState<DynamicDifficultyLevel>("adaptive");
+  const [selectedQuizMode, setSelectedQuizMode] = useState<'multiple-choice' | 'typing'>('multiple-choice');
   const [hasStarted, setHasStarted] = useState(false);
+  const [typingAnswer, setTypingAnswer] = useState("");
 
   const {
     currentQuestion,
@@ -46,6 +49,7 @@ export default function DynamicQuizPage() {
     difficultyLevel: selectedDifficulty,
     questionCount: 20,
     timePerQuestion: 30,
+    quizMode: selectedQuizMode,
   });
 
   const handleStart = () => {
@@ -73,6 +77,19 @@ export default function DynamicQuizPage() {
   const handleExitQuiz = () => {
     setHasStarted(false);
     resetQuiz();
+  };
+
+  const handleTypingSubmit = () => {
+    if (typingAnswer.trim()) {
+      submitAnswer(typingAnswer.trim());
+      setTypingAnswer("");
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !showResult) {
+      handleTypingSubmit();
+    }
   };
 
   if (!hasStarted) {
@@ -128,6 +145,46 @@ export default function DynamicQuizPage() {
                   </Button>
                 </div>
               )}
+            </div>
+
+            {/* Quiz Mode Selector */}
+            <div className="space-y-4 mb-8">
+              <div className="text-center">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Question Format</h3>
+                <p className="text-gray-600">Choose how you'd like to answer questions</p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                <Card 
+                  className={`cursor-pointer transition-all ${
+                    selectedQuizMode === 'multiple-choice' 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                  onClick={() => setSelectedQuizMode('multiple-choice')}
+                >
+                  <CardContent className="p-6 text-center">
+                    <MousePointer className="mx-auto h-8 w-8 text-blue-600 mb-3" />
+                    <h4 className="font-semibold text-gray-900 mb-2">Multiple Choice</h4>
+                    <p className="text-sm text-gray-600">Click to select from 4 options</p>
+                  </CardContent>
+                </Card>
+                
+                <Card 
+                  className={`cursor-pointer transition-all ${
+                    selectedQuizMode === 'typing' 
+                      ? 'border-green-500 bg-green-50' 
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                  onClick={() => setSelectedQuizMode('typing')}
+                >
+                  <CardContent className="p-6 text-center">
+                    <Keyboard className="mx-auto h-8 w-8 text-green-600 mb-3" />
+                    <h4 className="font-semibold text-gray-900 mb-2">Type Answer</h4>
+                    <p className="text-sm text-gray-600">Type the correct answer yourself</p>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
 
             <Button 
@@ -319,40 +376,77 @@ export default function DynamicQuizPage() {
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {currentQuestionData.options.map((option) => {
-                let buttonClass = "p-4 text-left border-2 border-gray-200 hover:border-blue-300 bg-white";
-                
-                if (showResult && selectedAnswer) {
-                  if (option === currentQuestionData.correctAnswer) {
-                    buttonClass = "p-4 text-left border-2 border-green-500 bg-green-50 text-green-800";
-                  } else if (option === selectedAnswer) {
-                    buttonClass = "p-4 text-left border-2 border-red-500 bg-red-50 text-red-800";
-                  } else {
-                    buttonClass = "p-4 text-left border-2 border-gray-200 bg-gray-50 text-gray-600";
+            {selectedQuizMode === 'multiple-choice' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {currentQuestionData.options.map((option) => {
+                  let buttonClass = "p-4 text-left border-2 border-gray-200 hover:border-blue-300 bg-white";
+                  
+                  if (showResult && selectedAnswer) {
+                    if (option === currentQuestionData.correctAnswer) {
+                      buttonClass = "p-4 text-left border-2 border-green-500 bg-green-50 text-green-800";
+                    } else if (option === selectedAnswer) {
+                      buttonClass = "p-4 text-left border-2 border-red-500 bg-red-50 text-red-800";
+                    } else {
+                      buttonClass = "p-4 text-left border-2 border-gray-200 bg-gray-50 text-gray-600";
+                    }
                   }
-                }
 
-                return (
-                  <button
-                    key={option}
-                    onClick={() => !showResult && submitAnswer(option)}
+                  return (
+                    <button
+                      key={option}
+                      onClick={() => !showResult && submitAnswer(option)}
+                      disabled={showResult}
+                      className={`${buttonClass} rounded-lg transition-all text-lg font-medium`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span>{option}</span>
+                        {showResult && option === currentQuestionData.correctAnswer && (
+                          <CheckCircle className="h-6 w-6 text-green-600" />
+                        )}
+                        {showResult && option === selectedAnswer && option !== currentQuestionData.correctAnswer && (
+                          <XCircle className="h-6 w-6 text-red-600" />
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="max-w-md mx-auto">
+                <div className="space-y-4">
+                  <Input
+                    type="text"
+                    value={typingAnswer}
+                    onChange={(e) => setTypingAnswer(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Type your answer here..."
                     disabled={showResult}
-                    className={`${buttonClass} rounded-lg transition-all text-lg font-medium`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span>{option}</span>
-                      {showResult && option === currentQuestionData.correctAnswer && (
-                        <CheckCircle className="h-6 w-6 text-green-600" />
-                      )}
-                      {showResult && option === selectedAnswer && option !== currentQuestionData.correctAnswer && (
-                        <XCircle className="h-6 w-6 text-red-600" />
-                      )}
+                    className="text-lg p-4 text-center"
+                    autoFocus
+                  />
+                  {!showResult && (
+                    <Button
+                      onClick={handleTypingSubmit}
+                      disabled={!typingAnswer.trim()}
+                      className="w-full"
+                      size="lg"
+                    >
+                      Submit Answer
+                    </Button>
+                  )}
+                  {showResult && (
+                    <div className="p-4 border-2 rounded-lg bg-gray-50">
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600 mb-2">Correct Answer:</p>
+                        <p className="text-lg font-semibold text-gray-900">
+                          {currentQuestionData.correctAnswer}
+                        </p>
+                      </div>
                     </div>
-                  </button>
-                );
-              })}
-            </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {showResult && (
               <div className="mt-6 text-center">
