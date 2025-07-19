@@ -54,6 +54,8 @@ export default function MapChallenge() {
   const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [useGoogleMaps, setUseGoogleMaps] = useState(true);
+  const [mapDifficulty, setMapDifficulty] = useState<'guided' | 'intermediate' | 'expert'>('guided');
+  const [showDifficultySelector, setShowDifficultySelector] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
   
   const [mapState, setMapState] = useState<MapState>({
@@ -275,6 +277,108 @@ export default function MapChallenge() {
     setQuestions(generatedQuestions);
   };
 
+  // Difficulty selector screen
+  if (showDifficultySelector) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8 px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <Button variant="ghost" size="sm" onClick={handleClose}>
+              <X className="w-4 h-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </div>
+          
+          <Card className="max-w-3xl mx-auto">
+            <CardContent className="p-8">
+              <div className="text-center mb-8">
+                <Globe className="w-16 h-16 text-primary mx-auto mb-4" />
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Map Challenge Setup</h1>
+                <p className="text-lg text-gray-600">Choose your map visualization difficulty</p>
+              </div>
+              
+              <div className="grid gap-6 mb-8">
+                {/* Guided Mode */}
+                <div 
+                  className={`p-6 rounded-lg border-2 cursor-pointer transition-all ${
+                    mapDifficulty === 'guided' 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                  onClick={() => setMapDifficulty('guided')}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="text-left">
+                      <h4 className="text-xl font-semibold text-gray-900 mb-2">🎯 Guided Mode</h4>
+                      <p className="text-gray-600">
+                        Country markers are always visible - Perfect for learning geography and getting familiar with country locations
+                      </p>
+                    </div>
+                    <Badge className="bg-green-100 text-green-800">Easier</Badge>
+                  </div>
+                </div>
+
+                {/* Intermediate Mode */}
+                <div 
+                  className={`p-6 rounded-lg border-2 cursor-pointer transition-all ${
+                    mapDifficulty === 'intermediate' 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                  onClick={() => setMapDifficulty('intermediate')}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="text-left">
+                      <h4 className="text-xl font-semibold text-gray-900 mb-2">🎲 Intermediate Mode</h4>
+                      <p className="text-gray-600">
+                        Markers appear only on hover - Explore the map to discover countries with subtle visual hints
+                      </p>
+                    </div>
+                    <Badge className="bg-yellow-100 text-yellow-800">Medium</Badge>
+                  </div>
+                </div>
+
+                {/* Expert Mode */}
+                <div 
+                  className={`p-6 rounded-lg border-2 cursor-pointer transition-all ${
+                    mapDifficulty === 'expert' 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                  onClick={() => setMapDifficulty('expert')}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="text-left">
+                      <h4 className="text-xl font-semibold text-gray-900 mb-2">🌍 Expert Mode</h4>
+                      <p className="text-gray-600">
+                        No markers or hints - Pure geography knowledge test using only real country borders and shapes
+                      </p>
+                    </div>
+                    <Badge className="bg-red-100 text-red-800">Hardest</Badge>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-center">
+                <p className="text-gray-600 mb-6">
+                  Geography Level: <Badge variant="outline" className="ml-2 capitalize">{difficulty}</Badge>
+                </p>
+                
+                <Button 
+                  onClick={() => setShowDifficultySelector(false)} 
+                  size="lg" 
+                  className="text-lg px-8 py-4"
+                >
+                  Continue with {mapDifficulty.charAt(0).toUpperCase() + mapDifficulty.slice(1)} Mode
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   // Loading state
   if (countries.length === 0 || questions.length === 0) {
     return (
@@ -343,26 +447,41 @@ export default function MapChallenge() {
                   <span className="text-gray-600">Countries available:</span>
                   <span className="font-medium">{countries.length}</span>
                 </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-600">Map mode:</span>
+                  <Badge variant="outline" className="capitalize">{mapDifficulty}</Badge>
+                </div>
               </div>
               
-              <Button 
-                onClick={handleStartGame} 
-                size="lg" 
-                className="text-lg px-8 py-4"
-                disabled={startQuizMutation.isPending}
-              >
-                {startQuizMutation.isPending ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Starting...
-                  </>
-                ) : (
-                  <>
-                    <MapPin className="w-5 h-5 mr-2" />
-                    Start Map Challenge
-                  </>
-                )}
-              </Button>
+              <div className="space-y-3">
+                <Button 
+                  onClick={handleStartGame} 
+                  size="lg" 
+                  className="w-full text-lg px-8 py-4"
+                  disabled={startQuizMutation.isPending}
+                >
+                  {startQuizMutation.isPending ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Starting...
+                    </>
+                  ) : (
+                    <>
+                      <MapPin className="w-5 h-5 mr-2" />
+                      Start Map Challenge
+                    </>
+                  )}
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowDifficultySelector(true)} 
+                  className="w-full"
+                  disabled={startQuizMutation.isPending}
+                >
+                  Change Map Difficulty
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -496,6 +615,10 @@ export default function MapChallenge() {
                     targetCountry={currentQuestion?.type === 'locate-country' ? currentQuestion.country.code : undefined}
                     showResult={showResult}
                     isCorrect={isCorrect}
+                    markerVisibility={
+                      mapDifficulty === 'guided' ? 'always' : 
+                      mapDifficulty === 'intermediate' ? 'hover' : 'never'
+                    }
                     onCountryClick={(countryCode) => {
                       if (currentQuestion?.type === 'locate-country' && !isAnswered) {
                         handleCountryClick(countryCode);
@@ -515,6 +638,10 @@ export default function MapChallenge() {
                     targetCountry={currentQuestion?.type === 'locate-country' ? currentQuestion.country.code : undefined}
                     showResult={showResult}
                     isCorrect={isCorrect}
+                    markerVisibility={
+                      mapDifficulty === 'guided' ? 'always' : 
+                      mapDifficulty === 'intermediate' ? 'hover' : 'never'
+                    }
                     onCountryClick={(countryCode) => {
                       if (currentQuestion?.type === 'locate-country' && !isAnswered) {
                         handleCountryClick(countryCode);

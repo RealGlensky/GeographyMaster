@@ -8,6 +8,7 @@ interface GoogleMapsWorldProps {
   targetCountry?: string | null;
   showResult?: boolean;
   isCorrect?: boolean;
+  markerVisibility?: 'always' | 'hover' | 'never';
   onCountryClick?: (countryCode: string) => void;
   onCountryHover?: (countryCode: string | null) => void;
 }
@@ -63,6 +64,7 @@ export function GoogleMapsWorld({
   targetCountry,
   showResult,
   isCorrect,
+  markerVisibility = 'always',
   onCountryClick,
   onCountryHover
 }: GoogleMapsWorldProps) {
@@ -167,6 +169,20 @@ export function GoogleMapsWorld({
       const isTarget = targetCountry === country.code;
       const isSelected = selectedCountry === country.code;
       const isHovered = hoveredCountry === country.code;
+
+      // Determine if marker should be visible based on visibility setting
+      let shouldShowMarker = false;
+      if (markerVisibility === 'always') {
+        shouldShowMarker = true;
+      } else if (markerVisibility === 'hover') {
+        shouldShowMarker = isHovered || isSelected || (showResult && isTarget);
+      } else if (markerVisibility === 'never') {
+        shouldShowMarker = showResult && isTarget; // Only show when revealing answer
+      }
+
+      if (!shouldShowMarker) {
+        return null; // Don't create marker
+      }
 
       let icon = {
         path: window.google.maps.SymbolPath.CIRCLE,
