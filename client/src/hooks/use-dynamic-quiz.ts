@@ -52,7 +52,15 @@ export function useDynamicQuiz({
     queryKey: ['/api/user/recommended-countries', difficultyLevel, questionCount],
     queryFn: async () => {
       console.log('Fetching recommended countries for:', difficultyLevel, 'count:', questionCount * 2);
-      const result = await apiRequest(`/api/user/recommended-countries?level=${difficultyLevel}&count=${questionCount * 2}`) as CountryWithDynamicDifficulty[];
+      const response = await fetch(`/api/user/recommended-countries?level=${difficultyLevel}&count=${questionCount * 2}`, {
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const result = await response.json() as CountryWithDynamicDifficulty[];
       console.log('Query result:', result?.length, 'countries');
       return result;
     },
@@ -290,13 +298,15 @@ export function useDynamicQuiz({
     });
   }, [questionCount, timePerQuestion]);
 
-  // Debug logging
-  console.log('useDynamicQuiz state:', {
-    difficultyLevel,
-    isLoadingRecommendations,
-    recommendedCountriesLength: recommendedCountries?.length,
-    canStart: !isLoadingRecommendations && recommendedCountries && recommendedCountries.length > 0
-  });
+  // Debug logging (only when values change)
+  React.useEffect(() => {
+    console.log('useDynamicQuiz state:', {
+      difficultyLevel,
+      isLoadingRecommendations,
+      recommendedCountriesLength: recommendedCountries?.length,
+      canStart: !isLoadingRecommendations && recommendedCountries && recommendedCountries.length > 0
+    });
+  }, [difficultyLevel, isLoadingRecommendations, recommendedCountries?.length]);
 
   return {
     ...quizState,

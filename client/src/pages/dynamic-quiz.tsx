@@ -43,15 +43,17 @@ export default function DynamicQuizPage() {
     startQuiz();
   };
 
-  // Debug log to see what's happening with the quiz state
-  console.log('Dynamic Quiz Debug:', {
-    selectedDifficulty,
-    hasStarted,
-    isLoadingRecommendations,
-    canStart,
-    recommendedCountriesCount,
-    difficultyLevel
-  });
+  // Debug log to see what's happening with the quiz state (only log once per render cycle)
+  React.useEffect(() => {
+    console.log('Dynamic Quiz Debug:', {
+      selectedDifficulty,
+      hasStarted,
+      isLoadingRecommendations,
+      canStart,
+      recommendedCountriesCount,
+      difficultyLevel
+    });
+  }, [selectedDifficulty, hasStarted, isLoadingRecommendations, canStart, recommendedCountriesCount, difficultyLevel]);
 
   const handleRestart = () => {
     setHasStarted(false);
