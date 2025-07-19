@@ -126,9 +126,14 @@ export function useDynamicQuiz({
 
   // Start quiz
   const startQuiz = useCallback(async () => {
-    if (!recommendedCountries || recommendedCountries.length === 0) return;
+    console.log('startQuiz called, recommendedCountries:', recommendedCountries?.length);
+    if (!recommendedCountries || recommendedCountries.length === 0) {
+      console.log('No recommended countries available');
+      return;
+    }
 
     const questions = generateQuestions(recommendedCountries);
+    console.log('Generated questions:', questions.length);
     
     // Create quiz session
     const sessionData = {

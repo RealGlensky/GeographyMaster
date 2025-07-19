@@ -38,6 +38,7 @@ export default function DynamicQuizPage() {
   });
 
   const handleStart = () => {
+    console.log('handleStart called, canStart:', canStart, 'isLoadingRecommendations:', isLoadingRecommendations, 'recommendedCountriesCount:', recommendedCountriesCount);
     setHasStarted(true);
     startQuiz();
   };
