@@ -18,6 +18,7 @@ import { DynamicDifficultySelector } from "@/components/dynamic-difficulty-selec
 import { Input } from "@/components/ui/input";
 import { useDynamicQuiz } from "@/hooks/use-dynamic-quiz";
 import { DynamicDifficultyLevel } from "@shared/schema";
+import { countries } from "@/data/countries";
 import { Clock, Target, Brain, CheckCircle, XCircle, RotateCcw, ArrowLeft, Keyboard, MousePointer } from "lucide-react";
 
 export default function DynamicQuizPage() {
@@ -344,9 +345,20 @@ export default function DynamicQuizPage() {
         {currentCountry && (
           <div className="bg-white rounded-lg p-4 mb-6 border">
             <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-gray-900">{currentCountry.name}</h3>
-                <p className="text-sm text-gray-600">{currentCountry.continent}</p>
+              <div className="flex items-center gap-3">
+                <img 
+                  src={`https://flagcdn.com/w40/${currentCountry.code.toLowerCase()}.png`}
+                  alt={`${currentCountry.name} flag`}
+                  className="w-8 h-6 object-cover rounded shadow-sm"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
+                />
+                <div>
+                  <h3 className="font-semibold text-gray-900">{currentCountry.name}</h3>
+                  <p className="text-sm text-gray-600">{currentCountry.continent}</p>
+                </div>
               </div>
               <div className="text-right">
                 {currentCountry.masteryLevel !== undefined && (
@@ -368,11 +380,34 @@ export default function DynamicQuizPage() {
         <Card className="mb-6">
           <CardContent className="p-8">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                {currentQuestionData.type === 'country-to-capital' 
-                  ? `What is the capital of ${currentQuestionData.country}?`
-                  : `Which country has ${currentQuestionData.capital} as its capital?`
-                }
+              <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center justify-center gap-3">
+                {currentQuestionData.type === 'country-to-capital' ? (
+                  <>
+                    <img 
+                      src={`https://flagcdn.com/w40/${currentCountry?.code.toLowerCase()}.png`}
+                      alt={`${currentQuestionData.country} flag`}
+                      className="w-8 h-6 object-cover rounded shadow-sm"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
+                    />
+                    What is the capital of {currentQuestionData.country}?
+                  </>
+                ) : (
+                  <>
+                    Which country has {currentQuestionData.capital} as its capital?
+                    <img 
+                      src={`https://flagcdn.com/w40/${currentCountry?.code.toLowerCase()}.png`}
+                      alt={`${currentQuestionData.country} flag`}
+                      className="w-8 h-6 object-cover rounded shadow-sm"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
+                    />
+                  </>
+                )}
               </h2>
             </div>
 
@@ -391,6 +426,11 @@ export default function DynamicQuizPage() {
                     }
                   }
 
+                  // Check if this is a country name option to show flag
+                  const isCountryOption = currentQuestionData.type === 'capital-to-country';
+                  const countryForFlag = isCountryOption ? 
+                    countries.find(country => country.name === option) : null;
+
                   return (
                     <button
                       key={option}
@@ -399,13 +439,28 @@ export default function DynamicQuizPage() {
                       className={`${buttonClass} rounded-lg transition-all text-lg font-medium`}
                     >
                       <div className="flex items-center justify-between">
-                        <span>{option}</span>
-                        {showResult && option === currentQuestionData.correctAnswer && (
-                          <CheckCircle className="h-6 w-6 text-green-600" />
-                        )}
-                        {showResult && option === selectedAnswer && option !== currentQuestionData.correctAnswer && (
-                          <XCircle className="h-6 w-6 text-red-600" />
-                        )}
+                        <div className="flex items-center gap-3">
+                          {countryForFlag && (
+                            <img 
+                              src={`https://flagcdn.com/w40/${countryForFlag.code.toLowerCase()}.png`}
+                              alt={`${option} flag`}
+                              className="w-6 h-4 object-cover rounded shadow-sm"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                              }}
+                            />
+                          )}
+                          <span>{option}</span>
+                        </div>
+                        <div className="flex items-center">
+                          {showResult && option === currentQuestionData.correctAnswer && (
+                            <CheckCircle className="h-6 w-6 text-green-600" />
+                          )}
+                          {showResult && option === selectedAnswer && option !== currentQuestionData.correctAnswer && (
+                            <XCircle className="h-6 w-6 text-red-600" />
+                          )}
+                        </div>
                       </div>
                     </button>
                   );
