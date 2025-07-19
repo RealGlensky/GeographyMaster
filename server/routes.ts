@@ -310,6 +310,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Logout route for demo mode
+  app.get("/api/logout", async (req: any, res) => {
+    // In demo mode, just redirect to home page
+    res.redirect("/");
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
