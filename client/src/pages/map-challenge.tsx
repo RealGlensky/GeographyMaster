@@ -32,6 +32,8 @@ interface MapQuestion {
   type: 'locate-country' | 'name-capital';
   questionText: string;
   correctAnswer: string;
+  stage: 'location' | 'capital'; // Two-stage questions
+  locationCorrect?: boolean; // Track if location was correct
 }
 
 export default function MapChallenge() {
@@ -53,6 +55,8 @@ export default function MapChallenge() {
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
+  const [locationStageComplete, setLocationStageComplete] = useState(false);
+  const [locationWasCorrect, setLocationWasCorrect] = useState(false);
   const [useGoogleMaps, setUseGoogleMaps] = useState(true);
   const [mapDifficulty, setMapDifficulty] = useState<'guided' | 'intermediate' | 'expert'>('guided');
   const [showDifficultySelector, setShowDifficultySelector] = useState(true);
@@ -110,25 +114,14 @@ export default function MapChallenge() {
     const shuffled = [...countries].sort(() => Math.random() - 0.5);
     const selectedCountries = shuffled.slice(0, count);
     
-    return selectedCountries.map(country => {
-      const questionType = Math.random() > 0.5 ? 'locate-country' : 'name-capital';
-      
-      if (questionType === 'locate-country') {
-        return {
-          country,
-          type: 'locate-country',
-          questionText: `Click on ${country.name} on the map`,
-          correctAnswer: country.code,
-        };
-      } else {
-        return {
-          country,
-          type: 'name-capital',
-          questionText: `What is the capital of ${country.name}?`,
-          correctAnswer: country.capital,
-        };
-      }
-    });
+    // All questions are now two-stage: locate country first, then name capital
+    return selectedCountries.map(country => ({
+      country,
+      type: 'locate-country' as const,
+      questionText: `Click on ${country.name} on the map`,
+      correctAnswer: country.code,
+      stage: 'location' as const,
+    }));
   };
 
   const startQuizMutation = useMutation({
@@ -179,42 +172,44 @@ export default function MapChallenge() {
   };
 
   const handleCountryClick = (countryCode: string) => {
-    if (isAnswered || currentQuestion?.type !== 'locate-country') return;
+    if (locationStageComplete || !currentQuestion) return;
     
     setSelectedCountry(countryCode);
     const correct = countryCode === currentQuestion.correctAnswer;
-    setIsCorrect(correct);
-    setIsAnswered(true);
+    setLocationWasCorrect(correct);
+    setLocationStageComplete(true);
     setShowResult(true);
     
-    if (correct) {
-      setMapState(prev => ({ ...prev, score: prev.score + 1 }));
-    }
-
-    // Submit answer to backend
-    const responseTime = mapState.questionStartTime ? Date.now() - mapState.questionStartTime : 0;
-    submitAnswerMutation.mutate({ answer: countryCode, responseTime });
-    
+    // After 1.5 seconds, move to capital stage
     setTimeout(() => {
-      proceedToNextQuestion();
-    }, 2500);
+      setShowResult(false);
+      // Focus on input for capital entry
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, 1500);
   };
 
   const handleAnswerSubmit = () => {
-    if (isAnswered || !userAnswer.trim() || currentQuestion?.type !== 'name-capital') return;
+    if (!locationStageComplete || isAnswered || !userAnswer.trim() || !currentQuestion) return;
     
-    const correct = isTypingCorrect(userAnswer, currentQuestion.correctAnswer);
-    setIsCorrect(correct);
+    const capitalCorrect = isTypingCorrect(userAnswer, currentQuestion.country.capital);
+    setIsCorrect(capitalCorrect);
     setIsAnswered(true);
     setShowResult(true);
     
-    if (correct) {
+    // Score calculation: both stages must be correct for full point
+    if (locationWasCorrect && capitalCorrect) {
       setMapState(prev => ({ ...prev, score: prev.score + 1 }));
     }
 
-    // Submit answer to backend
+    // Submit combined answer to backend
     const responseTime = mapState.questionStartTime ? Date.now() - mapState.questionStartTime : 0;
-    submitAnswerMutation.mutate({ answer: userAnswer, responseTime });
+    const combinedAnswer = `${selectedCountry}|${userAnswer}`;
+    submitAnswerMutation.mutate({ 
+      answer: combinedAnswer, 
+      responseTime 
+    });
     
     setTimeout(() => {
       proceedToNextQuestion();
@@ -245,11 +240,14 @@ export default function MapChallenge() {
         timeRemaining: 45,
         questionStartTime: Date.now(),
       }));
+      // Reset all stage states
       setIsAnswered(false);
       setIsCorrect(false);
       setShowResult(false);
       setSelectedCountry(null);
       setUserAnswer("");
+      setLocationStageComplete(false);
+      setLocationWasCorrect(false);
     } else {
       setMapState(prev => ({ ...prev, sessionComplete: true }));
     }
@@ -271,6 +269,8 @@ export default function MapChallenge() {
     setShowResult(false);
     setSelectedCountry(null);
     setUserAnswer("");
+    setLocationStageComplete(false);
+    setLocationWasCorrect(false);
     
     // Generate new questions
     const generatedQuestions = generateMapQuestions(countries, 15);
@@ -612,20 +612,20 @@ export default function MapChallenge() {
                     countries={countries}
                     selectedCountry={selectedCountry}
                     hoveredCountry={hoveredCountry}
-                    targetCountry={currentQuestion?.type === 'locate-country' ? currentQuestion.country.code : undefined}
+                    targetCountry={currentQuestion?.country.code}
                     showResult={showResult}
-                    isCorrect={isCorrect}
+                    isCorrect={locationWasCorrect}
                     markerVisibility={
                       mapDifficulty === 'guided' ? 'always' : 
                       mapDifficulty === 'intermediate' ? 'hover' : 'never'
                     }
                     onCountryClick={(countryCode) => {
-                      if (currentQuestion?.type === 'locate-country' && !isAnswered) {
+                      if (!locationStageComplete) {
                         handleCountryClick(countryCode);
                       }
                     }}
                     onCountryHover={(countryCode) => {
-                      if (!isAnswered) {
+                      if (!locationStageComplete) {
                         setHoveredCountry(countryCode);
                       }
                     }}
@@ -635,20 +635,20 @@ export default function MapChallenge() {
                     countries={countries}
                     selectedCountry={selectedCountry}
                     hoveredCountry={hoveredCountry}
-                    targetCountry={currentQuestion?.type === 'locate-country' ? currentQuestion.country.code : undefined}
+                    targetCountry={currentQuestion?.country.code}
                     showResult={showResult}
-                    isCorrect={isCorrect}
+                    isCorrect={locationWasCorrect}
                     markerVisibility={
                       mapDifficulty === 'guided' ? 'always' : 
                       mapDifficulty === 'intermediate' ? 'hover' : 'never'
                     }
                     onCountryClick={(countryCode) => {
-                      if (currentQuestion?.type === 'locate-country' && !isAnswered) {
+                      if (!locationStageComplete) {
                         handleCountryClick(countryCode);
                       }
                     }}
                     onCountryHover={(countryCode) => {
-                      if (!isAnswered) {
+                      if (!locationStageComplete) {
                         setHoveredCountry(countryCode);
                       }
                     }}
@@ -656,10 +656,19 @@ export default function MapChallenge() {
                 )}
                 
                 {/* Hint overlay for locate questions */}
-                {currentQuestion?.type === 'locate-country' && !isAnswered && (
+                {!locationStageComplete && currentQuestion && (
                   <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg p-3 shadow-lg border z-10">
                     <p className="text-sm text-gray-600">
                       Click on <span className="font-semibold text-gray-900">{currentQuestion.country.name}</span> on the map
+                    </p>
+                  </div>
+                )}
+                
+                {/* Country name reveal in bottom corner (only after clicking) */}
+                {selectedCountry && locationStageComplete && hoveredCountry && (
+                  <div className="absolute bottom-4 left-4 bg-white rounded-lg p-3 shadow-lg border z-10">
+                    <p className="text-sm font-medium text-gray-900">
+                      {countries.find(c => c.code === hoveredCountry)?.name || hoveredCountry}
                     </p>
                   </div>
                 )}
@@ -688,7 +697,8 @@ export default function MapChallenge() {
                 
                 {currentQuestion && (
                   <div className="space-y-4">
-                    {currentQuestion.type === 'locate-country' ? (
+                    {!locationStageComplete ? (
+                      // Stage 1: Locate Country
                       <div className="text-center">
                         <MapPin className="w-12 h-12 text-blue-600 mx-auto mb-4" />
                         <h4 className="text-xl font-bold text-gray-900 mb-2">
@@ -707,12 +717,26 @@ export default function MapChallenge() {
                         />
                       </div>
                     ) : (
+                      // Stage 2: Name Capital
                       <div>
                         <div className="text-center mb-6">
                           <Globe className="w-12 h-12 text-green-600 mx-auto mb-4" />
                           <h4 className="text-xl font-bold text-gray-900 mb-2">
                             Name the Capital
                           </h4>
+                          {/* Show location result */}
+                          <div className="mb-4 p-3 rounded-lg bg-gray-50">
+                            <div className="flex items-center justify-center space-x-2">
+                              {locationWasCorrect ? (
+                                <CheckCircle className="w-5 h-5 text-green-600" />
+                              ) : (
+                                <XCircle className="w-5 h-5 text-red-600" />
+                              )}
+                              <span className={locationWasCorrect ? "text-green-600" : "text-red-600"}>
+                                Location: {locationWasCorrect ? "Correct" : "Incorrect"}
+                              </span>
+                            </div>
+                          </div>
                           <div className="flex items-center justify-center space-x-2 mb-4">
                             <CountryFlag countryCode={currentQuestion.country.code} />
                             <span className="text-lg font-medium">{currentQuestion.country.name}</span>
