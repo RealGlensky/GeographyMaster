@@ -3,10 +3,21 @@ import { useLocation, useSearch } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { DynamicDifficultySelector } from "@/components/dynamic-difficulty-selector";
 import { useDynamicQuiz } from "@/hooks/use-dynamic-quiz";
 import { DynamicDifficultyLevel } from "@shared/schema";
-import { Clock, Target, Brain, CheckCircle, XCircle, RotateCcw } from "lucide-react";
+import { Clock, Target, Brain, CheckCircle, XCircle, RotateCcw, ArrowLeft } from "lucide-react";
 
 export default function DynamicQuizPage() {
   const [, setLocation] = useLocation();
@@ -55,6 +66,11 @@ export default function DynamicQuizPage() {
   };
 
   const handleBackToSelection = () => {
+    setHasStarted(false);
+    resetQuiz();
+  };
+
+  const handleExitQuiz = () => {
     setHasStarted(false);
     resetQuiz();
   };
@@ -224,11 +240,33 @@ export default function DynamicQuizPage() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Smart Geography Quiz</h1>
-              <p className="text-gray-600">
-                Question {currentQuestion + 1} of {totalQuestions} • {difficultyLevel} mode
-              </p>
+            <div className="flex items-center gap-4">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Exit Quiz
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Exit Quiz?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to exit the quiz? Your current progress will be lost and you'll need to start over.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Continue Quiz</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleExitQuiz}>Exit and Lose Progress</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Smart Geography Quiz</h1>
+                <p className="text-gray-600">
+                  Question {currentQuestion + 1} of {totalQuestions} • {difficultyLevel} mode
+                </p>
+              </div>
             </div>
             <div className="text-right">
               <div className="text-2xl font-bold text-gray-900">{score}/{totalQuestions}</div>
