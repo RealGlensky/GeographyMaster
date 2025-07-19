@@ -143,7 +143,10 @@ export default function Dashboard() {
               </div>
               <div className="text-right">
                 <Button 
-                  onClick={() => setLocation('/dynamic-quiz')}
+                  onClick={() => {
+                    console.log('Smart Quiz button clicked, navigating to /dynamic-quiz');
+                    setLocation('/dynamic-quiz');
+                  }}
                   size="lg"
                   className="bg-blue-600 hover:bg-blue-700"
                 >

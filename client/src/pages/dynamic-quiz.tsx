@@ -9,6 +9,7 @@ import { DynamicDifficultyLevel } from "@shared/schema";
 import { Clock, Target, Brain, CheckCircle, XCircle, RotateCcw } from "lucide-react";
 
 export default function DynamicQuizPage() {
+  console.log('DynamicQuizPage component loaded');
   const [, setLocation] = useLocation();
   const searchString = useSearch();
   const urlParams = new URLSearchParams(searchString);
@@ -17,6 +18,8 @@ export default function DynamicQuizPage() {
     (urlParams.get("level") as DynamicDifficultyLevel) || "adaptive"
   );
   const [hasStarted, setHasStarted] = useState(false);
+
+  console.log('Dynamic Quiz Page state:', { selectedDifficulty, hasStarted });
 
   const {
     currentQuestion,
