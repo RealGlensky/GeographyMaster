@@ -52,10 +52,11 @@ Three-tier difficulty system:
 
 ### Progress Tracking
 Comprehensive analytics including:
-- Mastery levels per country (0-100 scale)
+- Enhanced mastery levels per country (0-100 scale with multi-factor calculation)
 - Accuracy rates and total study time
 - Streak tracking and daily statistics
-- Spaced repetition system for review scheduling
+- Spaced repetition system with time-based decay
+- Minimum attempt requirements for true mastery (85+ level, 3+ attempts)
 
 ## Data Flow
 
@@ -118,3 +119,4 @@ Preferred communication style: Simple, everyday language.
 Changelog:
 - June 27, 2025. Initial setup
 - July 18, 2025. Added comprehensive analytics dashboard system with clickable progress stats, detailed mastery tracking with blurred capitals for unmastered countries, streak calendar visualization, accuracy breakdown by difficulty and study mode, and Apple Screen Time-style study time analytics
+- July 19, 2025. Enhanced mastery system with multi-factor calculation including accuracy, consistency bonuses, time decay, and minimum attempt requirements (85+ mastery level, 3+ attempts for true mastery)
