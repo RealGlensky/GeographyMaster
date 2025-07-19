@@ -12,15 +12,11 @@ import { StudyTimeBreakdown } from "@/components/analytics/study-time-breakdown"
 
 export default function AnalyticsDashboard() {
   const [, navigate] = useLocation();
-  const [activeView, setActiveView] = useState<string | null>(null);
-
-  // Get the view from URL params
-  const urlParams = new URLSearchParams(window.location.search);
-  const viewFromUrl = urlParams.get('view');
-  
-  if (viewFromUrl && !activeView) {
-    setActiveView(viewFromUrl);
-  }
+  const [activeView, setActiveView] = useState<string | null>(() => {
+    // Initialize state from URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('view');
+  });
 
   const handleViewChange = (view: string) => {
     setActiveView(view);
