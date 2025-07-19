@@ -45,7 +45,7 @@ export interface IStorage {
     unmasteredCountries: Array<{countryCode: string; masteryLevel: number; correctAnswers: number; totalAttempts: number}>;
   }>;
   
-  getStreakCalendar(userId: number): Promise<Array<{date: string; hasActivity: boolean; studyTime: number}>>;
+  getStreakCalendar(userId: number, monthKey?: string): Promise<Array<{date: string; hasActivity: boolean; studyTime: number; questionsAnswered: number}>>;
   
   getAccuracyDetails(userId: number): Promise<{
     byDifficulty: Array<{difficulty: string; accuracy: number; totalQuestions: number}>;
@@ -413,21 +413,34 @@ export class MemStorage implements IStorage {
     return { masteredCountries, unmasteredCountries };
   }
 
-  async getStreakCalendar(userId: number): Promise<Array<{date: string; hasActivity: boolean; studyTime: number}>> {
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  async getStreakCalendar(userId: number, monthKey?: string): Promise<Array<{date: string; hasActivity: boolean; studyTime: number; questionsAnswered: number}>> {
+    let startDate: Date;
+    let endDate: Date;
+    
+    if (monthKey) {
+      // Parse monthKey format: YYYY-MM
+      const [year, month] = monthKey.split('-').map(Number);
+      startDate = new Date(year, month - 1, 1); // month is 0-indexed
+      endDate = new Date(year, month, 0); // Last day of the month
+    } else {
+      // Default to current month
+      const now = new Date();
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    }
     
     const calendarData = [];
-    const currentDate = new Date(thirtyDaysAgo);
+    const currentDate = new Date(startDate);
     
-    while (currentDate <= new Date()) {
+    while (currentDate <= endDate) {
       const dateStr = currentDate.toISOString().split('T')[0];
       const stats = await this.getDailyStats(userId, dateStr);
       
       calendarData.push({
         date: dateStr,
         hasActivity: stats ? stats.studyTime > 0 : false,
-        studyTime: stats?.studyTime || 0
+        studyTime: stats?.studyTime || 0,
+        questionsAnswered: stats?.questionsAnswered || 0
       });
       
       currentDate.setDate(currentDate.getDate() + 1);

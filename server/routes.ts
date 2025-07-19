@@ -71,7 +71,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get streak calendar data
   app.get("/api/user/streak-calendar", async (req, res) => {
     try {
-      const streakData = await storage.getStreakCalendar(1);
+      const monthKey = req.query.monthKey as string;
+      const streakData = await storage.getStreakCalendar(1, monthKey);
       res.json(streakData);
     } catch (error) {
       res.status(500).json({ message: "Failed to get streak calendar" });
