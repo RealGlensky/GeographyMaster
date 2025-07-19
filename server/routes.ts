@@ -181,6 +181,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Study goals routes
+  app.get("/api/user/study-goals", async (req, res) => {
+    try {
+      const goals = await storage.getUserStudyGoals(1);
+      res.json(goals);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get study goals" });
+    }
+  });
+
+  app.post("/api/user/study-goals", async (req, res) => {
+    try {
+      const { period, targetMinutes } = req.body;
+      const goal = await storage.setStudyGoal({
+        userId: 1,
+        period,
+        targetMinutes,
+        isActive: true,
+      });
+      res.json(goal);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create study goal" });
+    }
+  });
+
+  app.put("/api/user/study-goals/:goalId", async (req, res) => {
+    try {
+      const goalId = parseInt(req.params.goalId);
+      const updates = req.body;
+      await storage.updateStudyGoal(goalId, updates);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update study goal" });
+    }
+  });
+
+  app.delete("/api/user/study-goals/:goalId", async (req, res) => {
+    try {
+      const goalId = parseInt(req.params.goalId);
+      await storage.deleteStudyGoal(goalId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete study goal" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

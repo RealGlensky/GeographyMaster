@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Clock, Calendar, BarChart3, TrendingUp } from "lucide-react";
+import { GoalsManager } from "./goals-manager";
 
 export function StudyTimeBreakdown() {
   const [selectedPeriod, setSelectedPeriod] = useState('daily');
@@ -230,56 +231,7 @@ export function StudyTimeBreakdown() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-orange-600" />
-              Study Goals
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="p-3 bg-orange-50 rounded-lg">
-                <div className="font-medium text-orange-800 mb-2">Daily Goal</div>
-                <div className="text-sm text-orange-700 mb-2">Aim for 15 minutes daily</div>
-                <div className="w-full bg-orange-200 rounded-full h-2">
-                  <div
-                    className="bg-orange-600 h-2 rounded-full"
-                    style={{
-                      width: `${Math.min((averagePerPeriod / 15) * 100, 100)}%`
-                    }}
-                  />
-                </div>
-                <div className="text-xs text-orange-600 mt-1">
-                  {selectedPeriod === 'daily' ? `${Math.round((averagePerPeriod / 15) * 100)}%` : 'Switch to daily view'}
-                </div>
-              </div>
-
-              <div className="p-3 bg-yellow-50 rounded-lg">
-                <div className="font-medium text-yellow-800 mb-2">Weekly Goal</div>
-                <div className="text-sm text-yellow-700 mb-2">Target 2 hours per week</div>
-                <div className="w-full bg-yellow-200 rounded-full h-2">
-                  <div
-                    className="bg-yellow-600 h-2 rounded-full"
-                    style={{
-                      width: `${Math.min((averagePerPeriod / 120) * 100, 100)}%`
-                    }}
-                  />
-                </div>
-                <div className="text-xs text-yellow-600 mt-1">
-                  {selectedPeriod === 'weekly' ? `${Math.round((averagePerPeriod / 120) * 100)}%` : 'Switch to weekly view'}
-                </div>
-              </div>
-
-              <div className="p-3 bg-indigo-50 rounded-lg">
-                <div className="font-medium text-indigo-800 mb-1">Pro Tip</div>
-                <div className="text-sm text-indigo-700">
-                  Consistent short sessions (10-15 min) are more effective than occasional long sessions.
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <GoalsManager />
       </div>
     </div>
   );

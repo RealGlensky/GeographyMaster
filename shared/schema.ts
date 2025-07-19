@@ -55,6 +55,15 @@ export const dailyStats = pgTable("daily_stats", {
   studyTime: integer("study_time").default(0), // in minutes
 });
 
+export const studyGoals = pgTable("study_goals", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  period: text("period").notNull(), // 'daily', 'weekly', 'monthly'
+  targetMinutes: integer("target_minutes").notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -80,6 +89,11 @@ export const insertDailyStatsSchema = createInsertSchema(dailyStats).omit({
   id: true,
 });
 
+export const insertStudyGoalsSchema = createInsertSchema(studyGoals).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -91,6 +105,8 @@ export type Achievement = typeof achievements.$inferSelect;
 export type InsertAchievement = z.infer<typeof insertAchievementSchema>;
 export type DailyStats = typeof dailyStats.$inferSelect;
 export type InsertDailyStats = z.infer<typeof insertDailyStatsSchema>;
+export type StudyGoal = typeof studyGoals.$inferSelect;
+export type InsertStudyGoal = z.infer<typeof insertStudyGoalsSchema>;
 
 // Additional types for frontend
 export type Country = {

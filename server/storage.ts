@@ -1,8 +1,9 @@
 import { 
-  users, userProgress, quizSessions, achievements, dailyStats,
+  users, userProgress, quizSessions, achievements, dailyStats, studyGoals,
   type User, type InsertUser, type UserProgress, type InsertUserProgress,
   type QuizSession, type InsertQuizSession, type Achievement, type InsertAchievement,
-  type DailyStats, type InsertDailyStats, type StudyMode, type Difficulty
+  type DailyStats, type InsertDailyStats, type StudyGoal, type InsertStudyGoal,
+  type StudyMode, type Difficulty
 } from "@shared/schema";
 
 export interface IStorage {
@@ -54,6 +55,12 @@ export interface IStorage {
   }>;
   
   getStudyTimeBreakdown(userId: number, period: string): Promise<Array<{period: string; studyTime: number; sessionsCount: number}>>;
+  
+  // Study goals methods
+  getUserStudyGoals(userId: number): Promise<StudyGoal[]>;
+  setStudyGoal(goal: InsertStudyGoal): Promise<StudyGoal>;
+  updateStudyGoal(goalId: number, updates: Partial<StudyGoal>): Promise<void>;
+  deleteStudyGoal(goalId: number): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -62,6 +69,7 @@ export class MemStorage implements IStorage {
   private quizSessions: Map<number, QuizSession> = new Map();
   private achievements: Map<number, Achievement[]> = new Map();
   private dailyStats: Map<string, DailyStats> = new Map(); // key: userId-date
+  private studyGoals: Map<number, StudyGoal> = new Map();
   private currentId: number = 1;
   private sessionId: number = 1;
   private achievementId: number = 1;
@@ -558,6 +566,45 @@ export class MemStorage implements IStorage {
     }
     
     return data;
+  }
+
+  // Study goals methods
+  async getUserStudyGoals(userId: number): Promise<StudyGoal[]> {
+    const goals = Array.from(this.studyGoals.values()).filter(goal => goal.userId === userId);
+    return goals;
+  }
+
+  async setStudyGoal(goal: InsertStudyGoal): Promise<StudyGoal> {
+    const id = this.currentId++;
+    const newGoal: StudyGoal = {
+      id,
+      ...goal,
+      createdAt: new Date(),
+    };
+    
+    // Deactivate existing goals for the same period
+    const existingGoals = await this.getUserStudyGoals(goal.userId);
+    existingGoals
+      .filter(g => g.period === goal.period && g.isActive)
+      .forEach(g => {
+        g.isActive = false;
+        this.studyGoals.set(g.id, g);
+      });
+    
+    this.studyGoals.set(id, newGoal);
+    return newGoal;
+  }
+
+  async updateStudyGoal(goalId: number, updates: Partial<StudyGoal>): Promise<void> {
+    const goal = this.studyGoals.get(goalId);
+    if (!goal) return;
+    
+    const updatedGoal = { ...goal, ...updates };
+    this.studyGoals.set(goalId, updatedGoal);
+  }
+
+  async deleteStudyGoal(goalId: number): Promise<void> {
+    this.studyGoals.delete(goalId);
   }
 }
 
