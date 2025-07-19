@@ -48,12 +48,22 @@ export function useDynamicQuiz({
   });
 
   // Get recommended countries based on dynamic difficulty
-  const { data: recommendedCountries, isLoading: isLoadingRecommendations } = useQuery({
+  const { data: recommendedCountries, isLoading: isLoadingRecommendations, error } = useQuery({
     queryKey: ['/api/user/recommended-countries', difficultyLevel, questionCount],
-    queryFn: () => apiRequest(`/api/user/recommended-countries?level=${difficultyLevel}&count=${questionCount * 2}`) as Promise<CountryWithDynamicDifficulty[]>,
+    queryFn: async () => {
+      console.log('Fetching recommended countries for:', difficultyLevel, 'count:', questionCount * 2);
+      const result = await apiRequest(`/api/user/recommended-countries?level=${difficultyLevel}&count=${questionCount * 2}`) as CountryWithDynamicDifficulty[];
+      console.log('Query result:', result?.length, 'countries');
+      return result;
+    },
     staleTime: 30000, // Prevent too frequent refetches
     refetchOnWindowFocus: false,
+    retry: 3,
   });
+
+  if (error) {
+    console.error('Error fetching recommended countries:', error);
+  }
   
   const [quizState, setQuizState] = useState<DynamicQuizState>({
     sessionId: null,
