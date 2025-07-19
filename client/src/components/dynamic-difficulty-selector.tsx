@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -44,20 +44,47 @@ const difficultyLevelData = {
 
 export function DynamicDifficultySelector({ selectedLevel, onSelect }: DynamicDifficultySelectorProps) {
   const [previewLevel, setPreviewLevel] = useState<DynamicDifficultyLevel | null>(null);
+  const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
 
-  // Fetch recommended countries for preview
+  // Fetch recommended countries for preview with debouncing
   const { data: recommendedCountries } = useQuery({
     queryKey: ['/api/user/recommended-countries', previewLevel],
     enabled: previewLevel !== null,
+    staleTime: 60000, // Cache for 1 minute to prevent excessive requests
+    refetchOnWindowFocus: false,
   });
 
   const handleLevelHover = (level: DynamicDifficultyLevel) => {
-    setPreviewLevel(level);
+    // Clear any existing timeout
+    if (hoverTimeout) {
+      clearTimeout(hoverTimeout);
+    }
+    
+    // Set a delay before showing preview to reduce jumpiness
+    const timeout = setTimeout(() => {
+      setPreviewLevel(level);
+    }, 300); // 300ms delay
+    
+    setHoverTimeout(timeout);
   };
 
   const handleLevelLeave = () => {
+    // Clear any pending timeout
+    if (hoverTimeout) {
+      clearTimeout(hoverTimeout);
+      setHoverTimeout(null);
+    }
     setPreviewLevel(null);
   };
+
+  // Cleanup on unmount
+  React.useEffect(() => {
+    return () => {
+      if (hoverTimeout) {
+        clearTimeout(hoverTimeout);
+      }
+    };
+  }, [hoverTimeout]);
 
   return (
     <div className="space-y-6">
