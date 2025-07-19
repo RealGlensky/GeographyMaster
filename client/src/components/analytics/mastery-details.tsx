@@ -193,11 +193,11 @@ export function MasteryDetails() {
                     <div className="relative w-full">
                       <Progress 
                         value={country.masteryLevel} 
-                        className="w-full h-3"
+                        className="w-full h-2"
                       />
                       {/* Mastery threshold indicator line */}
                       <div 
-                        className="absolute top-1/2 -translate-y-1/2 w-0.5 h-2 bg-green-600 opacity-80"
+                        className="absolute top-1/2 -translate-y-1/2 w-0.5 h-1.5 bg-green-600 opacity-80"
                         style={{ left: '85%' }}
                       />
                     </div>
