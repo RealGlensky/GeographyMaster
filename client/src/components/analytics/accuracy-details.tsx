@@ -163,7 +163,21 @@ export function AccuracyDetails() {
   };
 
   // Show detailed view if a difficulty is selected
-  if (selectedDifficulty && difficultyDetails) {
+  if (selectedDifficulty) {
+    if (isLoadingDetails) {
+      return (
+        <div className="space-y-6">
+          <Card>
+            <CardContent className="p-8">
+              <div className="animate-pulse space-y-4">
+                <div className="h-4 bg-gray-300 rounded w-1/4"></div>
+                <div className="h-32 bg-gray-300 rounded"></div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
     return (
       <div className="space-y-6">
         {/* Header with back button */}
@@ -188,19 +202,19 @@ export function AccuracyDetails() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="text-center p-4 bg-blue-50 rounded-lg">
                 <div className="text-2xl font-bold text-blue-600 mb-1">
-                  {difficultyDetails.byDifficulty?.[0]?.accuracy || 0}%
+                  {difficultyDetails?.byDifficulty?.[0]?.accuracy || 0}%
                 </div>
                 <div className="text-sm text-blue-700">Overall Accuracy</div>
               </div>
               <div className="text-center p-4 bg-green-50 rounded-lg">
                 <div className="text-2xl font-bold text-green-600 mb-1">
-                  {difficultyDetails.byDifficulty?.[0]?.totalQuestions || 0}
+                  {difficultyDetails?.byDifficulty?.[0]?.totalQuestions || 0}
                 </div>
                 <div className="text-sm text-green-700">Total Questions</div>
               </div>
               <div className="text-center p-4 bg-purple-50 rounded-lg">
                 <div className="text-2xl font-bold text-purple-600 mb-1">
-                  {Math.round((difficultyDetails.byDifficulty?.[0]?.accuracy || 0) * (difficultyDetails.byDifficulty?.[0]?.totalQuestions || 0) / 100)}
+                  {Math.round((difficultyDetails?.byDifficulty?.[0]?.accuracy || 0) * (difficultyDetails?.byDifficulty?.[0]?.totalQuestions || 0) / 100)}
                 </div>
                 <div className="text-sm text-purple-700">Correct Answers</div>
               </div>
@@ -218,7 +232,7 @@ export function AccuracyDetails() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {difficultyDetails.byStudyMode?.length === 0 ? (
+              {!difficultyDetails?.byStudyMode || difficultyDetails.byStudyMode.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <BookOpen className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                   <div className="text-lg font-medium mb-2">No data for this difficulty level</div>
@@ -227,7 +241,7 @@ export function AccuracyDetails() {
                   </div>
                 </div>
               ) : (
-                difficultyDetails.byStudyMode?.map((item: any) => (
+                difficultyDetails.byStudyMode.map((item: any) => (
                   <div key={item.mode} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">{getModeIcon(item.mode)}</span>
@@ -267,7 +281,7 @@ export function AccuracyDetails() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {difficultyDetails.worstCountries?.length === 0 ? (
+            {!difficultyDetails?.worstCountries || difficultyDetails.worstCountries.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <TrendingDown className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                 <div className="text-lg font-medium mb-2">No performance data</div>
@@ -278,7 +292,7 @@ export function AccuracyDetails() {
             ) : (
               <ScrollArea className="h-64">
                 <div className="space-y-3">
-                  {difficultyDetails.worstCountries?.map((item: any, index: number) => {
+                  {difficultyDetails.worstCountries.map((item: any, index: number) => {
                     const country = countries.find(c => c.code === item.countryCode);
                     if (!country) return null;
 
