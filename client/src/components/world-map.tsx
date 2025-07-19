@@ -79,6 +79,13 @@ export function WorldMap({
     countries.some(country => country.code === mapCountry.code)
   );
 
+  console.log('WorldMap rendering:', { 
+    countriesLength: countries.length, 
+    availableMapCountries: availableMapCountries.length,
+    selectedCountry,
+    targetCountry 
+  });
+
   return (
     <div className="relative bg-gradient-to-b from-blue-100 to-blue-50 rounded-lg border-2 border-blue-200 min-h-[500px] overflow-hidden">
       <svg
@@ -96,6 +103,13 @@ export function WorldMap({
           </pattern>
         </defs>
         <rect width="800" height="600" fill="url(#grid)" />
+        
+        {/* Debug: Show all available countries */}
+        {availableMapCountries.length === 0 && (
+          <text x="400" y="300" textAnchor="middle" fontSize="16" fill="#ef4444">
+            No countries to display
+          </text>
+        )}
         
         {/* Country shapes */}
         {availableMapCountries.map((mapCountry) => {
@@ -137,23 +151,40 @@ export function WorldMap({
                 onMouseEnter={() => onCountryHover?.(mapCountry.code)}
               />
               
-              {/* Country label on hover or selection */}
+              {/* Always show country names for debugging */}
+              <text
+                x={mapCountry.x}
+                y={mapCountry.y}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fontSize="10"
+                fontWeight="normal"
+                fill="#1f2937"
+                className="pointer-events-none select-none"
+                style={{ 
+                  textShadow: '1px 1px 2px rgba(255,255,255,0.9)'
+                }}
+              >
+                {mapCountry.name.length > 8 ? mapCountry.name.substring(0, 8) + '...' : mapCountry.name}
+              </text>
+              
+              {/* Highlighted label on hover or selection */}
               {(isHovered || isSelected || (showResult && isTarget)) && (
                 <text
                   x={mapCountry.x}
-                  y={mapCountry.y}
+                  y={mapCountry.y - 15}
                   textAnchor="middle"
                   dominantBaseline="middle"
                   fontSize="12"
                   fontWeight="bold"
                   fill="#1f2937"
-                  className="pointer-events-none select-none drop-shadow-sm"
+                  className="pointer-events-none select-none"
                   style={{ 
                     textShadow: '1px 1px 2px rgba(255,255,255,0.9)',
                     filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.2))'
                   }}
                 >
-                  {mapCountry.name.length > 12 ? mapCountry.name.substring(0, 12) + '...' : mapCountry.name}
+                  {mapCountry.name}
                 </text>
               )}
             </g>
