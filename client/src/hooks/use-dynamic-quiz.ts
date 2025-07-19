@@ -175,7 +175,7 @@ export function useDynamicQuiz({
     };
 
     try {
-      const response = await fetch('/api/quiz-sessions', {
+      const response = await fetch('/api/quiz/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(sessionData),
@@ -250,7 +250,7 @@ export function useDynamicQuiz({
 
         // Update session as completed
         if (quizState.sessionId) {
-          fetch(`/api/quiz-sessions/${quizState.sessionId}`, {
+          fetch(`/api/quiz/${quizState.sessionId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
