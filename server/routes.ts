@@ -50,8 +50,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Return 401 if no authenticated user
-      res.status(401).json({ message: "Not authenticated" });
+      // For development: automatically return demo user
+      const demoUser = await ensureDemoUser();
+      req.session.userId = demoUser.id;
+      return res.json(demoUser);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });

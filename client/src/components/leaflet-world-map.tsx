@@ -222,7 +222,7 @@ export function LeafletWorldMap({
     }, 100); // 100ms debounce
 
     return () => clearTimeout(timeoutId);
-  }, [map, availableCountries, selectedCountry, hoveredCountry, targetCountry, showResult, isCorrect]);
+  }, [map, availableCountries, selectedCountry, hoveredCountry, targetCountry, showResult, isCorrect, markerVisibility]);
 
   if (!isLoaded) {
     return (
