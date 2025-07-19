@@ -51,6 +51,8 @@ export function useDynamicQuiz({
   const { data: recommendedCountries, isLoading: isLoadingRecommendations } = useQuery({
     queryKey: ['/api/user/recommended-countries', difficultyLevel, questionCount],
     queryFn: () => apiRequest(`/api/user/recommended-countries?level=${difficultyLevel}&count=${questionCount * 2}`) as Promise<CountryWithDynamicDifficulty[]>,
+    staleTime: 30000, // Prevent too frequent refetches
+    refetchOnWindowFocus: false,
   });
   
   const [quizState, setQuizState] = useState<DynamicQuizState>({
