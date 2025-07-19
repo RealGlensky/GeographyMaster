@@ -225,8 +225,13 @@ export function GoogleMapsWorld({
         map: map,
         icon: icon,
         title: country.name,
-        zIndex: isSelected || isHovered || (showResult && isTarget) ? 1000 : 1
+        zIndex: isSelected || isHovered || (showResult && isTarget) ? 2000 : 1000,
+        clickable: true,
+        optimized: false // Prevent marker clustering that can cause blinking
       });
+
+      // Store country code for identification
+      marker.countryCode = country.code;
 
       // Add click listener
       marker.addListener('click', () => {
@@ -246,10 +251,62 @@ export function GoogleMapsWorld({
     }).filter(Boolean);
 
       setMarkers(newMarkers);
-    }, 100); // 100ms debounce
+    }, 300); // 300ms debounce to reduce blinking
 
     return () => clearTimeout(timeoutId);
-  }, [map, availableCountries, selectedCountry, hoveredCountry, targetCountry, showResult, isCorrect, markerVisibility]);
+  }, [map, availableCountries, markerVisibility, targetCountry, showResult]);
+
+  // Separate effect for updating marker styles without recreating them
+  useEffect(() => {
+    if (!markers.length) return;
+
+    markers.forEach(marker => {
+      const countryCode = marker.countryCode; // We stored country code
+      const country = availableCountries.find(c => c.code === countryCode);
+      if (!country) return;
+
+      const isTarget = targetCountry === country.code;
+      const isSelected = selectedCountry === country.code;
+      const isHovered = hoveredCountry === country.code;
+
+      let icon = {
+        path: window.google.maps.SymbolPath.CIRCLE,
+        scale: 8,
+        fillColor: '#3b82f6',
+        fillOpacity: 0.6,
+        strokeWeight: 1,
+        strokeColor: '#ffffff'
+      };
+
+      if (showResult && isTarget && isCorrect) {
+        icon.fillColor = '#10b981';
+        icon.strokeColor = '#ffffff';
+        icon.scale = 12;
+        icon.fillOpacity = 0.9;
+        icon.strokeWeight = 2;
+      } else if (showResult && isSelected && !isCorrect) {
+        icon.fillColor = '#ef4444';
+        icon.strokeColor = '#ffffff';
+        icon.scale = 12;
+        icon.fillOpacity = 0.9;
+        icon.strokeWeight = 2;
+      } else if (isSelected) {
+        icon.fillColor = '#2563eb';
+        icon.strokeColor = '#ffffff';
+        icon.scale = 10;
+        icon.fillOpacity = 0.8;
+        icon.strokeWeight = 2;
+      } else if (isHovered) {
+        icon.fillColor = '#1d4ed8';
+        icon.strokeColor = '#ffffff';
+        icon.scale = 9;
+        icon.fillOpacity = 0.7;
+      }
+
+      marker.setIcon(icon);
+      marker.setZIndex(isSelected || isHovered || (showResult && isTarget) ? 2000 : 1000);
+    });
+  }, [markers, selectedCountry, hoveredCountry, isCorrect]);
 
   if (!isLoaded) {
     return (
