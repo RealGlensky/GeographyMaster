@@ -280,6 +280,14 @@ export function useDynamicQuiz({
     });
   }, [questionCount, timePerQuestion]);
 
+  // Debug logging
+  console.log('useDynamicQuiz state:', {
+    difficultyLevel,
+    isLoadingRecommendations,
+    recommendedCountriesLength: recommendedCountries?.length,
+    canStart: !isLoadingRecommendations && recommendedCountries && recommendedCountries.length > 0
+  });
+
   return {
     ...quizState,
     startQuiz,

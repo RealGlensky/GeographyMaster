@@ -43,6 +43,16 @@ export default function DynamicQuizPage() {
     startQuiz();
   };
 
+  // Debug log to see what's happening with the quiz state
+  console.log('Dynamic Quiz Debug:', {
+    selectedDifficulty,
+    hasStarted,
+    isLoadingRecommendations,
+    canStart,
+    recommendedCountriesCount,
+    difficultyLevel
+  });
+
   const handleRestart = () => {
     setHasStarted(false);
     resetQuiz();
