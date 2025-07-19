@@ -48,7 +48,7 @@ export interface IStorage {
   
   getStreakCalendar(userId: number, monthKey?: string): Promise<Array<{date: string; hasActivity: boolean; studyTime: number; questionsAnswered: number}>>;
   
-  getAccuracyDetails(userId: number, difficulty?: string): Promise<{
+  getAccuracyDetails(userId: number): Promise<{
     byDifficulty: Array<{difficulty: string; accuracy: number; totalQuestions: number}>;
     byStudyMode: Array<{mode: string; accuracy: number; totalQuestions: number}>;
     worstCountries: Array<{countryCode: string; accuracy: number; totalAttempts: number}>;
