@@ -227,6 +227,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Dynamic difficulty routes
+  app.get("/api/user/recommended-countries", async (req, res) => {
+    try {
+      const difficultyLevel = (req.query.level || 'adaptive') as any;
+      const count = parseInt(req.query.count as string) || 10;
+      
+      const recommendations = await storage.getRecommendedCountries(1, difficultyLevel, count);
+      res.json(recommendations);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get recommended countries" });
+    }
+  });
+
+  app.post("/api/user/update-progress-metrics", async (req, res) => {
+    try {
+      const { countryCode, isCorrect, responseTime, updates } = req.body;
+      
+      if (updates) {
+        await storage.updateProgressWithMetrics(1, countryCode, updates);
+      } else {
+        // Legacy fallback
+        await storage.updateProgress(1, countryCode, isCorrect);
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update progress metrics" });
+    }
+  });
+
+  app.get("/api/user/difficulty-recommendation", async (req, res) => {
+    try {
+      const recommendation = await storage.getDifficultyRecommendation(1);
+      res.json(recommendation);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get difficulty recommendation" });
+    }
+  });
+
+  app.post("/api/user/difficulty-recommendation", async (req, res) => {
+    try {
+      const recommendation = await storage.updateDifficultyRecommendation(1, req.body);
+      res.json(recommendation);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update difficulty recommendation" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

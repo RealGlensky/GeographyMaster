@@ -1,9 +1,10 @@
 import { 
-  users, userProgress, quizSessions, achievements, dailyStats, studyGoals,
+  users, userProgress, quizSessions, achievements, dailyStats, studyGoals, difficultyRecommendations,
   type User, type InsertUser, type UserProgress, type InsertUserProgress,
   type QuizSession, type InsertQuizSession, type Achievement, type InsertAchievement,
   type DailyStats, type InsertDailyStats, type StudyGoal, type InsertStudyGoal,
-  type StudyMode, type Difficulty
+  type DifficultyRecommendation, type InsertDifficultyRecommendation,
+  type StudyMode, type Difficulty, type DynamicDifficultyLevel, type CountryWithDynamicDifficulty
 } from "@shared/schema";
 
 export interface IStorage {
@@ -19,6 +20,7 @@ export interface IStorage {
   getUserProgress(userId: number): Promise<UserProgress[]>;
   getProgressByCountry(userId: number, countryCode: string): Promise<UserProgress | undefined>;
   updateProgress(userId: number, countryCode: string, correct: boolean): Promise<void>;
+  updateProgressWithMetrics(userId: number, countryCode: string, updates: Partial<UserProgress>): Promise<void>;
   getReviewItems(userId: number): Promise<UserProgress[]>;
   
   // Quiz session methods
@@ -61,6 +63,11 @@ export interface IStorage {
   setStudyGoal(goal: InsertStudyGoal): Promise<StudyGoal>;
   updateStudyGoal(goalId: number, updates: Partial<StudyGoal>): Promise<void>;
   deleteStudyGoal(goalId: number): Promise<void>;
+  
+  // Dynamic difficulty methods
+  getRecommendedCountries(userId: number, difficultyLevel: DynamicDifficultyLevel, count?: number): Promise<CountryWithDynamicDifficulty[]>;
+  updateDifficultyRecommendation(userId: number, recommendation: InsertDifficultyRecommendation): Promise<DifficultyRecommendation>;
+  getDifficultyRecommendation(userId: number): Promise<DifficultyRecommendation | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -70,11 +77,13 @@ export class MemStorage implements IStorage {
   private achievements: Map<number, Achievement[]> = new Map();
   private dailyStats: Map<string, DailyStats> = new Map(); // key: userId-date
   private studyGoals: Map<number, StudyGoal> = new Map();
+  private difficultyRecommendations: Map<number, DifficultyRecommendation> = new Map(); // key: userId
   private currentId: number = 1;
   private sessionId: number = 1;
   private achievementId: number = 1;
   private progressId: number = 1;
   private statsId: number = 1;
+  private recommendationId: number = 1;
 
   constructor() {
     // Create default user for demo
@@ -106,7 +115,10 @@ export class MemStorage implements IStorage {
         correctAnswers,
         totalAttempts,
         lastReviewed: new Date(),
-        needsReview: masteryLevel < 80
+        needsReview: masteryLevel < 80,
+        averageResponseTime: Math.floor(Math.random() * 5000) + 2000, // 2-7 seconds
+        consistencyScore: Math.floor(Math.random() * 40) + 40, // 40-80
+        personalDifficultyRating: Math.floor(Math.random() * 60) + 20 // 20-80
       });
     });
 
@@ -302,6 +314,31 @@ export class MemStorage implements IStorage {
     return Array.from(this.userProgress.values())
       .filter(p => p.userId === userId && p.needsReview)
       .sort((a, b) => a.masteryLevel - b.masteryLevel);
+  }
+
+  async updateProgressWithMetrics(userId: number, countryCode: string, updates: Partial<UserProgress>): Promise<void> {
+    const key = `${userId}-${countryCode}`;
+    let progress = this.userProgress.get(key);
+    
+    if (!progress) {
+      progress = {
+        id: this.progressId++,
+        userId,
+        countryCode,
+        masteryLevel: 0,
+        correctAnswers: 0,
+        totalAttempts: 0,
+        lastReviewed: new Date(),
+        needsReview: false,
+        averageResponseTime: 0,
+        consistencyScore: 50,
+        personalDifficultyRating: 50
+      };
+    }
+    
+    // Apply updates
+    Object.assign(progress, updates);
+    this.userProgress.set(key, progress);
   }
 
   async createQuizSession(session: InsertQuizSession): Promise<QuizSession> {
@@ -608,6 +645,34 @@ export class MemStorage implements IStorage {
 
   async deleteStudyGoal(goalId: number): Promise<void> {
     this.studyGoals.delete(goalId);
+  }
+
+  // Dynamic difficulty methods
+  async getRecommendedCountries(userId: number, difficultyLevel: DynamicDifficultyLevel, count: number = 10): Promise<CountryWithDynamicDifficulty[]> {
+    const { getRecommendedCountries } = await import("@shared/dynamic-difficulty");
+    const { countries } = await import("../client/src/data/countries");
+    
+    const userProgress = await this.getUserProgress(userId);
+    return getRecommendedCountries(userProgress, countries, difficultyLevel, count);
+  }
+
+  async updateDifficultyRecommendation(userId: number, recommendation: InsertDifficultyRecommendation): Promise<DifficultyRecommendation> {
+    const existing = this.difficultyRecommendations.get(userId);
+    const id = existing?.id || this.recommendationId++;
+    
+    const newRecommendation: DifficultyRecommendation = {
+      id,
+      userId,
+      ...recommendation,
+      lastUpdated: new Date(),
+    };
+    
+    this.difficultyRecommendations.set(userId, newRecommendation);
+    return newRecommendation;
+  }
+
+  async getDifficultyRecommendation(userId: number): Promise<DifficultyRecommendation | undefined> {
+    return this.difficultyRecommendations.get(userId);
   }
 }
 

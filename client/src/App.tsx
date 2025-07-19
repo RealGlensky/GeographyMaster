@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Navbar } from "@/components/navbar";
 import Dashboard from "@/pages/dashboard";
 import Quiz from "@/pages/quiz";
+import DynamicQuiz from "@/pages/dynamic-quiz";
 import Flashcards from "@/pages/flashcards";
 import TypingPractice from "@/pages/typing-practice";
 import MapChallenge from "@/pages/map-challenge";
@@ -18,6 +19,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Dashboard} />
       <Route path="/quiz" component={Quiz} />
+      <Route path="/dynamic-quiz" component={DynamicQuiz} />
       <Route path="/flashcards" component={Flashcards} />
       <Route path="/typing-practice" component={TypingPractice} />
       <Route path="/map-challenge" component={MapChallenge} />

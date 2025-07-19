@@ -107,11 +107,60 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Featured: Smart Quiz */}
+      <div className="mb-8">
+        <Card className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Brain className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">🧠 NEW: Smart Geography Quiz</h3>
+                    <p className="text-sm text-blue-600 font-medium">AI-powered personalized learning</p>
+                  </div>
+                </div>
+                <p className="text-gray-700 mb-4">
+                  Experience our revolutionary adaptive difficulty system that learns from your performance 
+                  and provides the perfect challenge level for maximum learning efficiency.
+                </p>
+                <div className="flex items-center gap-4 text-sm text-gray-600">
+                  <div className="flex items-center gap-1">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    Personalized difficulty
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    Real-time adaptation
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    Performance tracking
+                  </div>
+                </div>
+              </div>
+              <div className="text-right">
+                <Button 
+                  onClick={() => setLocation('/dynamic-quiz')}
+                  size="lg"
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  Try Smart Quiz
+                </Button>
+                <p className="text-xs text-gray-500 mt-2">No difficulty selection needed!</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Study Modes */}
         <div className="lg:col-span-2 space-y-8">
           <div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-6">Choose Your Study Mode</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-6">Traditional Study Modes</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <StudyModeCard
                 title="Quick Quiz"

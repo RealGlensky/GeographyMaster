@@ -21,6 +21,9 @@ export const userProgress = pgTable("user_progress", {
   totalAttempts: integer("total_attempts").default(0),
   lastReviewed: timestamp("last_reviewed"),
   needsReview: boolean("needs_review").default(false),
+  averageResponseTime: integer("average_response_time").default(0), // in milliseconds
+  consistencyScore: integer("consistency_score").default(0), // 0-100, based on recent performance
+  personalDifficultyRating: integer("personal_difficulty_rating").default(50), // 0-100, user's personal difficulty for this country
 });
 
 export const quizSessions = pgTable("quiz_sessions", {
@@ -64,6 +67,16 @@ export const studyGoals = pgTable("study_goals", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// New table for dynamic difficulty recommendations
+export const difficultyRecommendations = pgTable("difficulty_recommendations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  recommendedCountries: text("recommended_countries").array().default([]), // country codes
+  difficultyLevel: text("difficulty_level").notNull(), // calculated dynamic difficulty
+  confidenceScore: integer("confidence_score").default(0), // 0-100, how confident we are in this recommendation
+  lastUpdated: timestamp("last_updated").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -94,6 +107,11 @@ export const insertStudyGoalsSchema = createInsertSchema(studyGoals).omit({
   createdAt: true,
 });
 
+export const insertDifficultyRecommendationsSchema = createInsertSchema(difficultyRecommendations).omit({
+  id: true,
+  lastUpdated: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -107,6 +125,8 @@ export type DailyStats = typeof dailyStats.$inferSelect;
 export type InsertDailyStats = z.infer<typeof insertDailyStatsSchema>;
 export type StudyGoal = typeof studyGoals.$inferSelect;
 export type InsertStudyGoal = z.infer<typeof insertStudyGoalsSchema>;
+export type DifficultyRecommendation = typeof difficultyRecommendations.$inferSelect;
+export type InsertDifficultyRecommendation = z.infer<typeof insertDifficultyRecommendationsSchema>;
 
 // Additional types for frontend
 export type Country = {
@@ -128,3 +148,12 @@ export type QuizQuestion = {
 
 export type StudyMode = 'quiz' | 'flashcards' | 'typing' | 'map';
 export type Difficulty = 'beginner' | 'easy' | 'intermediate' | 'advanced' | 'expert';
+export type DynamicDifficultyLevel = 'adaptive' | 'review' | 'challenge' | 'mastery';
+
+// Enhanced Country type for dynamic difficulty
+export type CountryWithDynamicDifficulty = Country & {
+  personalDifficultyRating?: number; // 0-100
+  masteryLevel?: number; // 0-100
+  recommendationReason?: string;
+  isRecommended?: boolean;
+};
