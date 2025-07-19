@@ -125,12 +125,24 @@ export function getRecommendedCountries(
   
   switch (targetDifficultyLevel) {
     case 'review':
-      // Countries that need review
+      // Countries that need review (be more inclusive to ensure availability)
       filteredCountries = countriesWithDifficulty.filter(country => {
         const progress = progressMap.get(country.code);
-        return progress && needsReview(progress, config);
+        // Include ANY country that has been attempted and isn't fully mastered
+        return progress && progress.totalAttempts > 0 && (country.masteryLevel || 0) < config.masteryThreshold;
       });
-      filteredCountries.forEach(c => c.recommendationReason = 'Due for review');
+      
+      // If still no countries, include countries with any progress at all
+      if (filteredCountries.length === 0) {
+        filteredCountries = countriesWithDifficulty.filter(country => {
+          const progress = progressMap.get(country.code);
+          return progress && (progress.totalAttempts > 0 || (country.masteryLevel || 0) > 0);
+        });
+      }
+      
+      // Sort by those most needing review (lower mastery levels first)
+      filteredCountries.sort((a, b) => (a.masteryLevel || 0) - (b.masteryLevel || 0));
+      filteredCountries.forEach(c => c.recommendationReason = 'Review and reinforce');
       break;
       
     case 'adaptive':
@@ -161,6 +173,15 @@ export function getRecommendedCountries(
       break;
   }
   
+  // Ensure we have at least some countries for any mode by falling back to adaptive recommendations
+  if (filteredCountries.length === 0 && targetDifficultyLevel !== 'adaptive') {
+    filteredCountries = countriesWithDifficulty.filter(country => {
+      const difficulty = country.personalDifficultyRating || 50;
+      return difficulty >= 30 && difficulty <= 70 && (country.masteryLevel || 0) < config.masteryThreshold;
+    }).slice(0, Math.max(3, count));
+    filteredCountries.forEach(c => c.recommendationReason = `Fallback from ${targetDifficultyLevel} mode`);
+  }
+
   // Sort by recommendation strength and return top count
   const sortedCountries = filteredCountries
     .sort((a, b) => {

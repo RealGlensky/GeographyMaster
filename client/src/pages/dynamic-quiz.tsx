@@ -74,14 +74,36 @@ export default function DynamicQuizPage() {
                 <p className="text-gray-600">Analyzing your progress and preparing personalized questions...</p>
               )}
               {!isLoadingRecommendations && canStart && (
-                <p className="text-green-600 font-medium">
-                  Ready! {recommendedCountriesCount} countries selected for your {difficultyLevel} session.
-                </p>
+                <div className="text-center">
+                  <p className="text-green-600 font-medium mb-2">
+                    Ready! {recommendedCountriesCount} countries selected for your {difficultyLevel} session.
+                  </p>
+                  <div className="text-sm text-gray-600">
+                    {selectedDifficulty === 'adaptive' && "Countries matched to your skill level for optimal learning"}
+                    {selectedDifficulty === 'review' && "Countries you've studied before that need reinforcement"}
+                    {selectedDifficulty === 'challenge' && "Harder countries to push your knowledge further"}
+                    {selectedDifficulty === 'mastery' && "Countries you're close to mastering - finish them off!"}
+                  </div>
+                </div>
               )}
               {!isLoadingRecommendations && !canStart && (
-                <p className="text-red-600">
-                  No countries available for this difficulty level. Try a different level.
-                </p>
+                <div className="text-center">
+                  <p className="text-amber-600 font-medium mb-2">
+                    Limited countries available for {difficultyLevel} mode right now.
+                  </p>
+                  <p className="text-sm text-gray-600 mb-3">
+                    {selectedDifficulty === 'review' && "As you practice more, countries will become available for review based on your progress."}
+                    {selectedDifficulty === 'mastery' && "Complete more quizzes to have countries approaching mastery level."}
+                    {selectedDifficulty === 'challenge' && "Try the adaptive mode first to build up your skills."}
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => setSelectedDifficulty('adaptive')}
+                    className="text-sm"
+                  >
+                    Switch to Adaptive Mode
+                  </Button>
+                </div>
               )}
             </div>
 

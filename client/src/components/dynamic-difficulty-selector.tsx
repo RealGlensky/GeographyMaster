@@ -11,7 +11,7 @@ interface DynamicDifficultySelectorProps {
 const difficultyLevelData = {
   review: {
     label: "Review",
-    description: "Countries due for review based on your progress",
+    description: "Practice countries you've already studied to strengthen memory",
     icon: BookOpen,
     badgeColor: "bg-orange-100 text-orange-600",
     borderColor: "hover:border-orange-500",
