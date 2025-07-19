@@ -232,14 +232,59 @@ export class MemStorage implements IStorage {
     progress.totalAttempts++;
     if (correct) {
       progress.correctAnswers++;
-      progress.masteryLevel = Math.min(100, progress.masteryLevel + 10);
-    } else {
-      progress.masteryLevel = Math.max(0, progress.masteryLevel - 5);
-      progress.needsReview = progress.masteryLevel < 50;
     }
     
+    // Enhanced mastery calculation
+    const accuracyRate = progress.correctAnswers / progress.totalAttempts;
+    const recentPerformance = this.calculateRecentPerformance(progress);
+    const consistencyBonus = this.calculateConsistencyBonus(progress);
+    const timeDecay = this.calculateTimeDecay(progress.lastReviewed);
+    
+    // Base mastery from accuracy (0-70 points)
+    let baseMastery = Math.round(accuracyRate * 70);
+    
+    // Consistency bonus (0-20 points) - requires multiple attempts
+    if (progress.totalAttempts >= 3) {
+      baseMastery += consistencyBonus;
+    }
+    
+    // Recent performance bonus (0-10 points)
+    baseMastery += recentPerformance;
+    
+    // Apply time decay (reduces mastery over time without practice)
+    progress.masteryLevel = Math.max(0, Math.min(100, baseMastery - timeDecay));
+    
+    // Update review status
+    progress.needsReview = progress.masteryLevel < 70 || accuracyRate < 0.6;
     progress.lastReviewed = new Date();
+    
     this.userProgress.set(key, progress);
+  }
+
+  private calculateRecentPerformance(progress: any): number {
+    // Simple implementation - in real app would track recent answers
+    const accuracyRate = progress.correctAnswers / progress.totalAttempts;
+    if (accuracyRate >= 0.8) return 10;
+    if (accuracyRate >= 0.6) return 5;
+    return 0;
+  }
+
+  private calculateConsistencyBonus(progress: any): number {
+    // Bonus for having multiple correct answers
+    if (progress.totalAttempts >= 5 && progress.correctAnswers >= 4) return 20;
+    if (progress.totalAttempts >= 3 && progress.correctAnswers >= 2) return 15;
+    if (progress.totalAttempts >= 2 && progress.correctAnswers >= 2) return 10;
+    return 0;
+  }
+
+  private calculateTimeDecay(lastReviewed: Date): number {
+    const daysSinceReview = (Date.now() - lastReviewed.getTime()) / (1000 * 60 * 60 * 24);
+    
+    // Gradual decay over time
+    if (daysSinceReview > 30) return 20; // Significant decay after a month
+    if (daysSinceReview > 14) return 10; // Some decay after 2 weeks
+    if (daysSinceReview > 7) return 5;   // Minor decay after a week
+    return 0; // No decay in first week
   }
 
   async getReviewItems(userId: number): Promise<UserProgress[]> {
@@ -328,7 +373,7 @@ export class MemStorage implements IStorage {
     const progress = await this.getUserProgress(userId);
     const sessions = await this.getUserQuizSessions(userId);
     
-    const totalCountriesMastered = progress.filter(p => p.masteryLevel >= 80).length;
+    const totalCountriesMastered = progress.filter(p => p.masteryLevel >= 85 && p.totalAttempts >= 3).length;
     const totalQuestions = sessions.reduce((sum, s) => sum + s.questionsAsked, 0);
     const totalCorrect = sessions.reduce((sum, s) => sum + s.questionsCorrect, 0);
     const accuracyRate = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
@@ -348,7 +393,7 @@ export class MemStorage implements IStorage {
     const progress = await this.getUserProgress(userId);
     
     const masteredCountries = progress
-      .filter(p => p.masteryLevel >= 80)
+      .filter(p => p.masteryLevel >= 85 && p.totalAttempts >= 3)  // Requires minimum attempts
       .map(p => ({
         countryCode: p.countryCode,
         masteryLevel: p.masteryLevel,
@@ -357,7 +402,7 @@ export class MemStorage implements IStorage {
       }));
     
     const unmasteredCountries = progress
-      .filter(p => p.masteryLevel < 80)
+      .filter(p => p.masteryLevel < 85 || p.totalAttempts < 3)
       .map(p => ({
         countryCode: p.countryCode,
         masteryLevel: p.masteryLevel,
