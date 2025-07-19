@@ -24,8 +24,8 @@ export default function AnalyticsDashboard() {
   };
 
   const handleBackToDashboard = () => {
-    setActiveView(null);
-    navigate('/analytics-dashboard');
+    // Force a complete navigation reset
+    window.location.href = '/analytics-dashboard';
   };
 
   const handleBackToMain = () => {
