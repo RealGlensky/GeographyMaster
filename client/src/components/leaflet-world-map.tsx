@@ -1,0 +1,248 @@
+import { useEffect, useRef, useState } from 'react';
+import { Country } from "@shared/schema";
+
+interface LeafletWorldMapProps {
+  countries: Country[];
+  selectedCountry?: string | null;
+  hoveredCountry?: string | null;
+  targetCountry?: string | null;
+  showResult?: boolean;
+  isCorrect?: boolean;
+  onCountryClick?: (countryCode: string) => void;
+  onCountryHover?: (countryCode: string | null) => void;
+}
+
+// Country coordinates for Leaflet
+const COUNTRY_COORDINATES: Record<string, { lat: number; lng: number; name: string }> = {
+  'US': { lat: 39.8283, lng: -98.5795, name: 'United States' },
+  'CA': { lat: 56.1304, lng: -106.3468, name: 'Canada' },
+  'MX': { lat: 23.6345, lng: -102.5528, name: 'Mexico' },
+  'BR': { lat: -14.2350, lng: -51.9253, name: 'Brazil' },
+  'AR': { lat: -38.4161, lng: -63.6167, name: 'Argentina' },
+  'PE': { lat: -9.1900, lng: -75.0152, name: 'Peru' },
+  'CL': { lat: -35.6751, lng: -71.5430, name: 'Chile' },
+  'GB': { lat: 55.3781, lng: -3.4360, name: 'United Kingdom' },
+  'FR': { lat: 46.6034, lng: 1.8883, name: 'France' },
+  'DE': { lat: 51.1657, lng: 10.4515, name: 'Germany' },
+  'ES': { lat: 40.4637, lng: -3.7492, name: 'Spain' },
+  'IT': { lat: 41.8719, lng: 12.5674, name: 'Italy' },
+  'NO': { lat: 60.4720, lng: 8.4689, name: 'Norway' },
+  'SE': { lat: 60.1282, lng: 18.6435, name: 'Sweden' },
+  'RU': { lat: 61.5240, lng: 105.3188, name: 'Russia' },
+  'DZ': { lat: 28.0339, lng: 1.6596, name: 'Algeria' },
+  'LY': { lat: 26.3351, lng: 17.2283, name: 'Libya' },
+  'EG': { lat: 26.8206, lng: 30.8025, name: 'Egypt' },
+  'NG': { lat: 9.0820, lng: 8.6753, name: 'Nigeria' },
+  'KE': { lat: -0.0236, lng: 37.9062, name: 'Kenya' },
+  'ZA': { lat: -30.5595, lng: 22.9375, name: 'South Africa' },
+  'CN': { lat: 35.8617, lng: 104.1954, name: 'China' },
+  'IN': { lat: 20.5937, lng: 78.9629, name: 'India' },
+  'JP': { lat: 36.2048, lng: 138.2529, name: 'Japan' },
+  'ID': { lat: -0.7893, lng: 113.9213, name: 'Indonesia' },
+  'TH': { lat: 15.8700, lng: 100.9925, name: 'Thailand' },
+  'MY': { lat: 4.2105, lng: 101.9758, name: 'Malaysia' },
+  'PH': { lat: 12.8797, lng: 121.7740, name: 'Philippines' },
+  'KR': { lat: 35.9078, lng: 127.7669, name: 'South Korea' },
+  'TR': { lat: 38.9637, lng: 35.2433, name: 'Turkey' },
+  'IR': { lat: 32.4279, lng: 53.6880, name: 'Iran' },
+  'AU': { lat: -25.2744, lng: 133.7751, name: 'Australia' },
+  'NZ': { lat: -40.9006, lng: 174.8860, name: 'New Zealand' },
+};
+
+declare global {
+  interface Window {
+    L: any;
+  }
+}
+
+export function LeafletWorldMap({
+  countries,
+  selectedCountry,
+  hoveredCountry,
+  targetCountry,
+  showResult,
+  isCorrect,
+  onCountryClick,
+  onCountryHover
+}: LeafletWorldMapProps) {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [map, setMap] = useState<any>(null);
+  const [markers, setMarkers] = useState<any[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Filter available countries
+  const availableCountries = countries.filter(country => 
+    COUNTRY_COORDINATES[country.code]
+  );
+
+  // Load Leaflet
+  useEffect(() => {
+    if (window.L) {
+      setIsLoaded(true);
+      return;
+    }
+
+    // Load CSS
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(link);
+
+    // Load JS
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.onload = () => {
+      setIsLoaded(true);
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      if (link.parentNode) link.parentNode.removeChild(link);
+      if (script.parentNode) script.parentNode.removeChild(script);
+    };
+  }, []);
+
+  // Initialize map
+  useEffect(() => {
+    if (!isLoaded || !mapRef.current || !window.L || map) return;
+
+    const leafletMap = window.L.map(mapRef.current, {
+      center: [20, 0],
+      zoom: 2,
+      zoomControl: true,
+      scrollWheelZoom: true,
+      doubleClickZoom: false,
+      boxZoom: false,
+      keyboard: false,
+      dragging: true
+    });
+
+    // Add tile layer with custom styling
+    window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+      className: 'map-tiles'
+    }).addTo(leafletMap);
+
+    setMap(leafletMap);
+
+    return () => {
+      leafletMap.remove();
+    };
+  }, [isLoaded]);
+
+  // Update markers
+  useEffect(() => {
+    if (!map || !window.L) return;
+
+    // Clear existing markers
+    markers.forEach(marker => map.removeLayer(marker));
+
+    const newMarkers = availableCountries.map(country => {
+      const coordinates = COUNTRY_COORDINATES[country.code];
+      if (!coordinates) return null;
+
+      const isTarget = targetCountry === country.code;
+      const isSelected = selectedCountry === country.code;
+      const isHovered = hoveredCountry === country.code;
+
+      let color = '#d1d5db';
+      let size = 12;
+
+      if (showResult && isTarget && isCorrect) {
+        color = '#10b981';
+        size = 16;
+      } else if (showResult && isSelected && !isCorrect) {
+        color = '#ef4444';
+        size = 16;
+      } else if (isSelected) {
+        color = '#3b82f6';
+        size = 14;
+      } else if (isHovered) {
+        color = '#6b7280';
+        size = 13;
+      }
+
+      const marker = window.L.circleMarker([coordinates.lat, coordinates.lng], {
+        radius: size,
+        fillColor: color,
+        fillOpacity: 0.8,
+        color: '#ffffff',
+        weight: 2,
+        opacity: 1
+      }).addTo(map);
+
+      // Add click listener
+      marker.on('click', () => {
+        onCountryClick?.(country.code);
+      });
+
+      // Add hover listeners
+      marker.on('mouseover', () => {
+        onCountryHover?.(country.code);
+      });
+
+      marker.on('mouseout', () => {
+        onCountryHover?.(null);
+      });
+
+      // Add tooltip
+      marker.bindTooltip(country.name, {
+        permanent: false,
+        direction: 'top',
+        offset: [0, -10]
+      });
+
+      return marker;
+    }).filter(Boolean);
+
+    setMarkers(newMarkers);
+  }, [map, availableCountries, selectedCountry, hoveredCountry, targetCountry, showResult, isCorrect]);
+
+  if (!isLoaded) {
+    return (
+      <div className="relative bg-gradient-to-b from-blue-100 to-blue-50 rounded-lg border-2 border-blue-200 min-h-[500px] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading world map...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative rounded-lg border-2 border-blue-200 min-h-[500px] overflow-hidden">
+      <div ref={mapRef} className="w-full h-[500px]" />
+      
+      {/* Custom UI Overlay */}
+      <div className="absolute top-4 left-4 bg-white rounded-lg p-3 shadow-lg border z-[1000]">
+        <div className="flex flex-wrap gap-3 text-xs">
+          <div className="flex items-center space-x-1">
+            <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
+            <span>Countries</span>
+          </div>
+          {showResult && (
+            <>
+              <div className="flex items-center space-x-1">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span>Correct</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                <span>Incorrect</span>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Country info overlay */}
+      {hoveredCountry && !showResult && (
+        <div className="absolute bottom-4 left-4 bg-white rounded-lg p-3 shadow-lg border z-[1000]">
+          <p className="text-sm font-medium text-gray-900">
+            {COUNTRY_COORDINATES[hoveredCountry]?.name || hoveredCountry}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}

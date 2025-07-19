@@ -11,7 +11,8 @@ import { Difficulty, Country, User } from "@shared/schema";
 import { getCountriesByDifficulty } from "@/data/countries";
 import { CountryFlag } from "@/components/country-flag";
 import { PronunciationButton } from "@/components/pronunciation-button";
-import { WorldMap } from "@/components/world-map";
+import { GoogleMapsWorld } from "@/components/google-maps-world";
+import { LeafletWorldMap } from "@/components/leaflet-world-map";
 import { apiRequest } from "@/lib/queryClient";
 import { formatTime, isTypingCorrect } from "@/lib/utils";
 
@@ -52,6 +53,7 @@ export default function MapChallenge() {
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
+  const [useGoogleMaps, setUseGoogleMaps] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
   
   const [mapState, setMapState] = useState<MapState>({
@@ -464,28 +466,67 @@ export default function MapChallenge() {
               <CardContent className="p-6">
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-gray-900">Interactive World Map</h3>
-                  <Globe className="w-5 h-5 text-gray-500" />
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant={useGoogleMaps ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setUseGoogleMaps(true)}
+                      className="text-xs"
+                    >
+                      Google Maps
+                    </Button>
+                    <Button
+                      variant={!useGoogleMaps ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setUseGoogleMaps(false)}
+                      className="text-xs"
+                    >
+                      OpenStreetMap
+                    </Button>
+                    <Globe className="w-5 h-5 text-gray-500" />
+                  </div>
                 </div>
                 
-                {/* World Map Component */}
-                <WorldMap
-                  countries={countries}
-                  selectedCountry={selectedCountry}
-                  hoveredCountry={hoveredCountry}
-                  targetCountry={currentQuestion?.type === 'locate-country' ? currentQuestion.country.code : undefined}
-                  showResult={showResult}
-                  isCorrect={isCorrect}
-                  onCountryClick={(countryCode) => {
-                    if (currentQuestion?.type === 'locate-country' && !isAnswered) {
-                      handleCountryClick(countryCode);
-                    }
-                  }}
-                  onCountryHover={(countryCode) => {
-                    if (!isAnswered) {
-                      setHoveredCountry(countryCode);
-                    }
-                  }}
-                />
+                {/* Map Component - Switch between Google Maps and OpenStreetMap */}
+                {useGoogleMaps ? (
+                  <GoogleMapsWorld
+                    countries={countries}
+                    selectedCountry={selectedCountry}
+                    hoveredCountry={hoveredCountry}
+                    targetCountry={currentQuestion?.type === 'locate-country' ? currentQuestion.country.code : undefined}
+                    showResult={showResult}
+                    isCorrect={isCorrect}
+                    onCountryClick={(countryCode) => {
+                      if (currentQuestion?.type === 'locate-country' && !isAnswered) {
+                        handleCountryClick(countryCode);
+                      }
+                    }}
+                    onCountryHover={(countryCode) => {
+                      if (!isAnswered) {
+                        setHoveredCountry(countryCode);
+                      }
+                    }}
+                  />
+                ) : (
+                  <LeafletWorldMap
+                    countries={countries}
+                    selectedCountry={selectedCountry}
+                    hoveredCountry={hoveredCountry}
+                    targetCountry={currentQuestion?.type === 'locate-country' ? currentQuestion.country.code : undefined}
+                    showResult={showResult}
+                    isCorrect={isCorrect}
+                    onCountryClick={(countryCode) => {
+                      if (currentQuestion?.type === 'locate-country' && !isAnswered) {
+                        handleCountryClick(countryCode);
+                      }
+                    }}
+                    onCountryHover={(countryCode) => {
+                      if (!isAnswered) {
+                        setHoveredCountry(countryCode);
+                      }
+                    }}
+                  />
+                )}
                 
                 {/* Hint overlay for locate questions */}
                 {currentQuestion?.type === 'locate-country' && !isAnswered && (
