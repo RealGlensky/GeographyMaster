@@ -101,105 +101,109 @@ export function MasteryDetails() {
               {allCountriesWithProgress.map((country) => (
                 <div
                   key={country.code}
-                  className={`flex items-center justify-between p-4 rounded-lg border ${
+                  className={`p-4 rounded-lg border ${
                     country.isMastered 
                       ? 'bg-green-50 border-green-200' 
                       : 'bg-gray-50 border-gray-200'
                   }`}
                 >
-                  <div className="flex items-center gap-4">
-                    <CountryFlag 
-                      countryCode={country.code} 
-                      countryName={country.name} 
-                      size="md"
-                    />
-                    
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`font-medium ${country.isMastered ? 'text-gray-900' : 'text-gray-400'}`}>
-                          {country.name}
-                        </span>
-                        <PronunciationButton 
-                          text={country.name}
-                          size="sm"
-                          variant="ghost"
-                          className="h-4 w-4 p-0"
-                        />
-                        {country.isMastered && (
-                          <CheckCircle className="w-4 h-4 text-green-600" />
-                        )}
-                        {!country.isMastered && country.totalAttempts === 0 && (
-                          <Lock className="w-4 h-4 text-gray-400" />
-                        )}
-                      </div>
+                  {/* Top row with country info and difficulty */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-4">
+                      <CountryFlag 
+                        countryCode={country.code} 
+                        countryName={country.name} 
+                        size="md"
+                      />
                       
-                      <div className="flex items-center gap-2">
-                        <span className={`text-sm ${
-                          country.isMastered 
-                            ? 'text-gray-700' 
-                            : 'text-gray-300 blur-sm select-none'
-                        }`}>
-                          Capital: {country.capital}
-                        </span>
-                        {country.isMastered && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`font-medium ${country.isMastered ? 'text-gray-900' : 'text-gray-400'}`}>
+                            {country.name}
+                          </span>
                           <PronunciationButton 
-                            text={country.capital}
+                            text={country.name}
                             size="sm"
                             variant="ghost"
-                            className="h-3 w-3 p-0"
+                            className="h-4 w-4 p-0"
                           />
-                        )}
-                      </div>
-                      
-                      <div className="mt-2">
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-500">
-                              Mastery: {country.masteryLevel}%
-                            </span>
-                            {country.totalAttempts > 0 && (
-                              <span className="text-xs text-gray-500">
-                                ({country.correctAnswers}/{country.totalAttempts} correct)
-                              </span>
-                            )}
-                          </div>
-                          {country.masteryLevel >= 85 && country.totalAttempts >= 3 ? (
-                            <span className="text-xs text-green-600 font-medium">Mastered</span>
-                          ) : country.totalAttempts === 0 ? (
-                            <span className="text-xs text-gray-400">Not Started</span>
-                          ) : country.totalAttempts < 3 ? (
-                            <span className="text-xs text-orange-500">Need {3 - country.totalAttempts} more</span>
-                          ) : (
-                            <span className="text-xs text-blue-600">Keep practicing</span>
+                          {country.isMastered && (
+                            <CheckCircle className="w-4 h-4 text-green-600" />
+                          )}
+                          {!country.isMastered && country.totalAttempts === 0 && (
+                            <Lock className="w-4 h-4 text-gray-400" />
                           )}
                         </div>
-                        <div className="relative w-full">
-                          <Progress 
-                            value={country.masteryLevel} 
-                            className="w-full h-3"
-                          />
-                          {/* Mastery threshold indicator line */}
-                          <div 
-                            className="absolute top-1/2 -translate-y-1/2 w-0.5 h-2 bg-green-600 opacity-80"
-                            style={{ left: '85%' }}
-                          />
+                        
+                        <div className="flex items-center gap-2">
+                          <span className={`text-sm ${
+                            country.isMastered 
+                              ? 'text-gray-700' 
+                              : 'text-gray-300 blur-sm select-none'
+                          }`}>
+                            Capital: {country.capital}
+                          </span>
+                          {country.isMastered && (
+                            <PronunciationButton 
+                              text={country.capital}
+                              size="sm"
+                              variant="ghost"
+                              className="h-3 w-3 p-0"
+                            />
+                          )}
                         </div>
-                        {country.totalAttempts > 0 && country.masteryLevel < 85 && (
-                          <div className="mt-1 text-xs text-gray-400">
-                            {85 - country.masteryLevel} points to mastery
-                          </div>
-                        )}
                       </div>
                     </div>
+                    
+                    <div className="text-right">
+                      <Badge className={difficultyColors[country.difficulty as keyof typeof difficultyColors] || "bg-gray-100 text-gray-600"}>
+                        {country.difficulty}
+                      </Badge>
+                      {country.totalAttempts > 0 && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          {Math.round((country.correctAnswers / country.totalAttempts) * 100)}% accuracy
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  
-                  <div className="text-right">
-                    <Badge className={difficultyColors[country.difficulty as keyof typeof difficultyColors] || "bg-gray-100 text-gray-600"}>
-                      {country.difficulty}
-                    </Badge>
-                    {country.totalAttempts > 0 && (
-                      <div className="text-xs text-gray-500 mt-1">
-                        {Math.round((country.correctAnswers / country.totalAttempts) * 100)}% accuracy
+
+                  {/* Progress section spans full width */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-500">
+                          Mastery: {country.masteryLevel}%
+                        </span>
+                        {country.totalAttempts > 0 && (
+                          <span className="text-xs text-gray-500">
+                            ({country.correctAnswers}/{country.totalAttempts} correct)
+                          </span>
+                        )}
+                      </div>
+                      {country.masteryLevel >= 85 && country.totalAttempts >= 3 ? (
+                        <span className="text-xs text-green-600 font-medium">Mastered</span>
+                      ) : country.totalAttempts === 0 ? (
+                        <span className="text-xs text-gray-400">Not Started</span>
+                      ) : country.totalAttempts < 3 ? (
+                        <span className="text-xs text-orange-500">Need {3 - country.totalAttempts} more</span>
+                      ) : (
+                        <span className="text-xs text-blue-600">Keep practicing</span>
+                      )}
+                    </div>
+                    <div className="relative w-full">
+                      <Progress 
+                        value={country.masteryLevel} 
+                        className="w-full h-3"
+                      />
+                      {/* Mastery threshold indicator line */}
+                      <div 
+                        className="absolute top-1/2 -translate-y-1/2 w-0.5 h-2 bg-green-600 opacity-80"
+                        style={{ left: '85%' }}
+                      />
+                    </div>
+                    {country.totalAttempts > 0 && country.masteryLevel < 85 && (
+                      <div className="mt-1 text-xs text-gray-400">
+                        {85 - country.masteryLevel} points to mastery
                       </div>
                     )}
                   </div>
