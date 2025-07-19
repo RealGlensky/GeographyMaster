@@ -120,3 +120,4 @@ Changelog:
 - June 27, 2025. Initial setup
 - July 18, 2025. Added comprehensive analytics dashboard system with clickable progress stats, detailed mastery tracking with blurred capitals for unmastered countries, streak calendar visualization, accuracy breakdown by difficulty and study mode, and Apple Screen Time-style study time analytics
 - July 19, 2025. Enhanced mastery system with multi-factor calculation including accuracy, consistency bonuses, time decay, and minimum attempt requirements (85+ mastery level, 3+ attempts for true mastery)
+- July 19, 2025. Implemented dynamic difficulty system with AI-powered personalized recommendations, replacing static difficulty levels with adaptive learning that analyzes user performance. Includes Smart Quiz feature with smooth, non-intrusive difficulty selection interface.

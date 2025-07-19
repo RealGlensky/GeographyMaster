@@ -1,9 +1,6 @@
-import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
-import { DynamicDifficultyLevel, CountryWithDynamicDifficulty } from "@shared/schema";
+import { DynamicDifficultyLevel } from "@shared/schema";
 import { Brain, BookOpen, Zap, Trophy } from "lucide-react";
 
 interface DynamicDifficultySelectorProps {
@@ -43,48 +40,6 @@ const difficultyLevelData = {
 };
 
 export function DynamicDifficultySelector({ selectedLevel, onSelect }: DynamicDifficultySelectorProps) {
-  const [previewLevel, setPreviewLevel] = useState<DynamicDifficultyLevel | null>(null);
-  const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
-
-  // Fetch recommended countries for preview with debouncing
-  const { data: recommendedCountries } = useQuery({
-    queryKey: ['/api/user/recommended-countries', previewLevel],
-    enabled: previewLevel !== null,
-    staleTime: 60000, // Cache for 1 minute to prevent excessive requests
-    refetchOnWindowFocus: false,
-  });
-
-  const handleLevelHover = (level: DynamicDifficultyLevel) => {
-    // Clear any existing timeout
-    if (hoverTimeout) {
-      clearTimeout(hoverTimeout);
-    }
-    
-    // Set a delay before showing preview to reduce jumpiness
-    const timeout = setTimeout(() => {
-      setPreviewLevel(level);
-    }, 300); // 300ms delay
-    
-    setHoverTimeout(timeout);
-  };
-
-  const handleLevelLeave = () => {
-    // Clear any pending timeout
-    if (hoverTimeout) {
-      clearTimeout(hoverTimeout);
-      setHoverTimeout(null);
-    }
-    setPreviewLevel(null);
-  };
-
-  // Cleanup on unmount
-  React.useEffect(() => {
-    return () => {
-      if (hoverTimeout) {
-        clearTimeout(hoverTimeout);
-      }
-    };
-  }, [hoverTimeout]);
 
   return (
     <div className="space-y-6">
@@ -101,12 +56,10 @@ export function DynamicDifficultySelector({ selectedLevel, onSelect }: DynamicDi
           return (
             <Card
               key={key}
-              className={`cursor-pointer transition-all ${data.borderColor} ${
-                selectedLevel === key ? 'border-primary ring-2 ring-primary/20 scale-105' : ''
+              className={`cursor-pointer transition-all duration-200 ${data.borderColor} ${
+                selectedLevel === key ? 'border-primary ring-2 ring-primary/20 scale-105' : 'hover:scale-102'
               }`}
               onClick={() => onSelect(key)}
-              onMouseEnter={() => handleLevelHover(key)}
-              onMouseLeave={handleLevelLeave}
             >
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -130,40 +83,6 @@ export function DynamicDifficultySelector({ selectedLevel, onSelect }: DynamicDi
           );
         })}
       </div>
-
-      {/* Preview Section */}
-      {previewLevel && recommendedCountries && (
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <h4 className="font-semibold text-gray-900 mb-3">
-            Preview: {difficultyLevelData[previewLevel].label} Mode
-          </h4>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
-            {(recommendedCountries as CountryWithDynamicDifficulty[]).slice(0, 10).map((country) => (
-              <div 
-                key={country.code}
-                className="flex items-center gap-2 p-2 bg-white rounded border text-sm"
-              >
-                <div className="flex-1">
-                  <div className="font-medium">{country.name}</div>
-                  {country.recommendationReason && (
-                    <div className="text-xs text-gray-500">{country.recommendationReason}</div>
-                  )}
-                </div>
-                {country.masteryLevel !== undefined && (
-                  <div className="text-xs font-mono text-gray-600">
-                    {country.masteryLevel}%
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-          {(recommendedCountries as CountryWithDynamicDifficulty[]).length > 10 && (
-            <p className="text-sm text-gray-500 mt-2">
-              And {(recommendedCountries as CountryWithDynamicDifficulty[]).length - 10} more countries...
-            </p>
-          )}
-        </div>
-      )}
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <div className="flex items-start gap-3">
