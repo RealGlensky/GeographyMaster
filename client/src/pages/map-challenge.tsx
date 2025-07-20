@@ -74,12 +74,6 @@ export default function MapChallenge() {
   });
   
   const currentQuestion = questions[mapState.currentQuestion];
-  console.log('=== QUESTION STATE DEBUG ===');
-  console.log('Current question index:', mapState.currentQuestion);
-  console.log('Total questions available:', questions.length);
-  console.log('Current question object:', currentQuestion);
-  console.log('All questions:', questions.map(q => ({ country: q.country.name, code: q.correctAnswer })));
-  console.log('=============================');
   const progressPercentage = (mapState.currentQuestion / mapState.totalQuestions) * 100;
 
   // Initialize countries when user data loads
@@ -95,7 +89,7 @@ export default function MapChallenge() {
       const generatedQuestions = generateMapQuestions(countries, mapState.totalQuestions);
       setQuestions(generatedQuestions);
     }
-  }, [countries, mapState.totalQuestions]);
+  }, [countries]); // Remove mapState.totalQuestions to prevent infinite re-renders
 
   const generateMapQuestions = (countries: Country[], count: number): MapQuestion[] => {
     const shuffled = [...countries].sort(() => Math.random() - 0.5);
@@ -121,16 +115,11 @@ export default function MapChallenge() {
       return await response.json();
     },
     onSuccess: (data) => {
-      console.log('=== GAME START DEBUG ===');
-      console.log('Session started with ID:', data.sessionId);
-      console.log('Available countries for questions:', countries.length);
-      console.log('Questions already generated:', questions.length);
-      
       // Regenerate questions to ensure fresh set
       if (countries.length > 0) {
         const freshQuestions = generateMapQuestions(countries, mapState.totalQuestions);
         setQuestions(freshQuestions);
-        console.log('Generated fresh questions:', freshQuestions.map(q => ({ country: q.country.name, code: q.correctAnswer })));
+        console.log('New game started - Questions generated:', freshQuestions.length);
       }
       
       setMapState(prev => ({
@@ -140,7 +129,6 @@ export default function MapChallenge() {
         questionStartTime: Date.now(),
         currentQuestion: 0, // Reset to first question
       }));
-      console.log('========================');
     },
   });
 
@@ -167,12 +155,8 @@ export default function MapChallenge() {
   // Memoized handlers to prevent infinite re-renders
   const proceedToNextQuestion = useCallback(() => {
     if (mapState.currentQuestion < mapState.totalQuestions - 1) {
-      console.log('=== NEXT QUESTION DEBUG ===');
-      console.log('Moving from question:', mapState.currentQuestion);
-      console.log('Moving to question:', mapState.currentQuestion + 1);
-      console.log('Next question will be:', questions[mapState.currentQuestion + 1]?.country.name);
-      console.log('Next correct answer will be:', questions[mapState.currentQuestion + 1]?.correctAnswer);
-      console.log('============================');
+      const nextQuestionIndex = mapState.currentQuestion + 1;
+      console.log(`Moving to Q${nextQuestionIndex + 1}: ${questions[nextQuestionIndex]?.country.name} (${questions[nextQuestionIndex]?.correctAnswer})`);
       
       // Reset all stage states first
       setIsAnswered(false);
@@ -250,13 +234,7 @@ export default function MapChallenge() {
   const handleCountryClick = (countryCode: string) => {
     if (locationStageComplete || !currentQuestion) return;
     
-    console.log('=== COUNTRY CLICK DEBUG ===');
-    console.log('Country clicked:', countryCode);
-    console.log('Expected correct answer:', currentQuestion.correctAnswer);
-    console.log('Current question index:', mapState.currentQuestion);
-    console.log('Current question country:', currentQuestion.country.name);
-    console.log('Location stage complete:', locationStageComplete);
-    console.log('===========================');
+    console.log(`Q${mapState.currentQuestion + 1}: Clicked ${countryCode}, Expected ${currentQuestion.correctAnswer} (${currentQuestion.country.name})`);
     
     setSelectedCountry(countryCode);
     const correct = countryCode === currentQuestion.correctAnswer;
