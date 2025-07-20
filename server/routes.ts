@@ -279,8 +279,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/quiz/:sessionId/answer", async (req: any, res) => {
     try {
       const userId = "demo-user-1";
-      const { countryCode, correct } = req.body;
-      await storage.updateProgress(userId, countryCode, correct);
+      const sessionId = parseInt(req.params.sessionId);
+      const { questionId, answer, responseTime, countryCode: cc, correct } = req.body;
+      
+      // For now, determine if this is a map challenge by checking answer format
+      const isMapChallenge = answer && answer.includes("|");
+      
+      let isCorrect = false;
+      let countryCode = "";
+      
+      if (isMapChallenge) {
+        // Use the country code and correctness from the frontend
+        countryCode = cc || "";
+        isCorrect = correct || false;
+      } else {
+        // Handle other quiz modes
+        countryCode = cc || "";
+        isCorrect = correct || false;
+      }
+      
+      // Update progress
+      if (countryCode) {
+        await storage.updateProgress(userId, countryCode, isCorrect);
+      }
       
       // Update daily stats
       const today = new Date().toISOString().split('T')[0];
@@ -288,11 +309,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       await storage.updateDailyStats(userId, today, {
         questionsAnswered: (currentStats?.questionsAnswered || 0) + 1,
-        questionsCorrect: (currentStats?.questionsCorrect || 0) + (correct ? 1 : 0),
+        questionsCorrect: (currentStats?.questionsCorrect || 0) + (isCorrect ? 1 : 0),
       });
       
-      res.json({ success: true });
+      res.json({ success: true, isCorrect });
     } catch (error) {
+      console.error("Quiz answer submission error:", error);
       res.status(500).json({ message: "Failed to submit answer" });
     }
   });

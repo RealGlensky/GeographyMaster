@@ -144,15 +144,15 @@ export default function MapChallenge() {
   });
 
   const submitAnswerMutation = useMutation({
-    mutationFn: async ({ answer, responseTime }: { answer: string; responseTime: number }) => {
+    mutationFn: async ({ answer, responseTime, countryCode, correct }: { answer: string; responseTime: number; countryCode?: string; correct?: boolean }) => {
       if (!mapState.sessionId) throw new Error("No session");
       
-      const response = await apiRequest("POST", "/api/quiz/answer", {
-        sessionId: mapState.sessionId,
+      const response = await apiRequest("POST", `/api/quiz/${mapState.sessionId}/answer`, {
         questionId: mapState.currentQuestion.toString(),
         answer,
         responseTime,
-        isCorrect,
+        countryCode,
+        correct,
       });
       return await response.json();
     },
@@ -206,9 +206,12 @@ export default function MapChallenge() {
     // Submit combined answer to backend
     const responseTime = mapState.questionStartTime ? Date.now() - mapState.questionStartTime : 0;
     const combinedAnswer = `${selectedCountry}|${userAnswer}`;
+    const overallCorrect = locationWasCorrect && capitalCorrect;
     submitAnswerMutation.mutate({ 
       answer: combinedAnswer, 
-      responseTime 
+      responseTime,
+      countryCode: currentQuestion.country.code,
+      correct: overallCorrect
     });
     
     setTimeout(() => {
