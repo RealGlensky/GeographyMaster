@@ -36,6 +36,21 @@ interface MapQuestion {
   locationCorrect?: boolean; // Track if location was correct
 }
 
+// Move this function outside component to prevent re-creation and infinite re-renders
+const generateMapQuestions = (countries: Country[], count: number): MapQuestion[] => {
+  const shuffled = [...countries].sort(() => Math.random() - 0.5);
+  const selectedCountries = shuffled.slice(0, count);
+  
+  // All questions are now two-stage: locate country first, then name capital
+  return selectedCountries.map(country => ({
+    country,
+    type: 'locate-country' as const,
+    questionText: `Click on ${country.name} on the map`,
+    correctAnswer: country.code,
+    stage: 'location' as const,
+  }));
+};
+
 export default function MapChallenge() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
@@ -90,20 +105,6 @@ export default function MapChallenge() {
       setQuestions(generatedQuestions);
     }
   }, [countries]); // Remove mapState.totalQuestions to prevent infinite re-renders
-
-  const generateMapQuestions = (countries: Country[], count: number): MapQuestion[] => {
-    const shuffled = [...countries].sort(() => Math.random() - 0.5);
-    const selectedCountries = shuffled.slice(0, count);
-    
-    // All questions are now two-stage: locate country first, then name capital
-    return selectedCountries.map(country => ({
-      country,
-      type: 'locate-country' as const,
-      questionText: `Click on ${country.name} on the map`,
-      correctAnswer: country.code,
-      stage: 'location' as const,
-    }));
-  };
 
   const startQuizMutation = useMutation({
     mutationFn: async () => {
