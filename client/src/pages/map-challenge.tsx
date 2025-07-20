@@ -92,6 +92,59 @@ export default function MapChallenge() {
     }
   }, [countries, mapState.totalQuestions]);
 
+  const generateMapQuestions = (countries: Country[], count: number): MapQuestion[] => {
+    const shuffled = [...countries].sort(() => Math.random() - 0.5);
+    const selectedCountries = shuffled.slice(0, count);
+    
+    // All questions are now two-stage: locate country first, then name capital
+    return selectedCountries.map(country => ({
+      country,
+      type: 'locate-country' as const,
+      questionText: `Click on ${country.name} on the map`,
+      correctAnswer: country.code,
+      stage: 'location' as const,
+    }));
+  };
+
+  const startQuizMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/quiz/start", {
+        mode: "map-challenge",
+        difficulty,
+        questionsAsked: mapState.totalQuestions,
+      });
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      setMapState(prev => ({
+        ...prev,
+        sessionId: data.sessionId,
+        gameStarted: true,
+        questionStartTime: Date.now(),
+      }));
+    },
+  });
+
+  const submitAnswerMutation = useMutation({
+    mutationFn: async ({ answer, responseTime, countryCode, correct }: { answer: string; responseTime: number; countryCode?: string; correct?: boolean }) => {
+      if (!mapState.sessionId) throw new Error("No session");
+      
+      const response = await apiRequest("POST", `/api/quiz/${mapState.sessionId}/answer`, {
+        questionId: mapState.currentQuestion.toString(),
+        answer,
+        responseTime,
+        countryCode,
+        correct,
+      });
+      return await response.json();
+    },
+    onSuccess: () => {
+      // Invalidate user stats to update progress
+      queryClient.invalidateQueries({ queryKey: ["/api/user/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/progress"] });
+    },
+  });
+
   // Memoized handlers to prevent infinite re-renders
   const proceedToNextQuestion = useCallback(() => {
     if (mapState.currentQuestion < mapState.totalQuestions - 1) {
@@ -152,59 +205,6 @@ export default function MapChallenge() {
       inputRef.current.focus();
     }
   }, [mapState.currentQuestion, currentQuestion]);
-
-  const generateMapQuestions = (countries: Country[], count: number): MapQuestion[] => {
-    const shuffled = [...countries].sort(() => Math.random() - 0.5);
-    const selectedCountries = shuffled.slice(0, count);
-    
-    // All questions are now two-stage: locate country first, then name capital
-    return selectedCountries.map(country => ({
-      country,
-      type: 'locate-country' as const,
-      questionText: `Click on ${country.name} on the map`,
-      correctAnswer: country.code,
-      stage: 'location' as const,
-    }));
-  };
-
-  const startQuizMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/quiz/start", {
-        mode: "map-challenge",
-        difficulty,
-        questionsAsked: mapState.totalQuestions,
-      });
-      return await response.json();
-    },
-    onSuccess: (data) => {
-      setMapState(prev => ({
-        ...prev,
-        sessionId: data.sessionId,
-        gameStarted: true,
-        questionStartTime: Date.now(),
-      }));
-    },
-  });
-
-  const submitAnswerMutation = useMutation({
-    mutationFn: async ({ answer, responseTime, countryCode, correct }: { answer: string; responseTime: number; countryCode?: string; correct?: boolean }) => {
-      if (!mapState.sessionId) throw new Error("No session");
-      
-      const response = await apiRequest("POST", `/api/quiz/${mapState.sessionId}/answer`, {
-        questionId: mapState.currentQuestion.toString(),
-        answer,
-        responseTime,
-        countryCode,
-        correct,
-      });
-      return await response.json();
-    },
-    onSuccess: () => {
-      // Invalidate user stats to update progress
-      queryClient.invalidateQueries({ queryKey: ["/api/user/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/user/progress"] });
-    },
-  });
 
   const handleClose = () => {
     setLocation("/");
