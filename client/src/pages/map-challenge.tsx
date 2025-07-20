@@ -148,7 +148,12 @@ export default function MapChallenge() {
   // Memoized handlers to prevent infinite re-renders
   const proceedToNextQuestion = useCallback(() => {
     if (mapState.currentQuestion < mapState.totalQuestions - 1) {
-      console.log('Moving to next question:', mapState.currentQuestion + 1);
+      console.log('=== NEXT QUESTION DEBUG ===');
+      console.log('Moving from question:', mapState.currentQuestion);
+      console.log('Moving to question:', mapState.currentQuestion + 1);
+      console.log('Next question will be:', questions[mapState.currentQuestion + 1]?.country.name);
+      console.log('Next correct answer will be:', questions[mapState.currentQuestion + 1]?.correctAnswer);
+      console.log('============================');
       
       // Reset all stage states first
       setIsAnswered(false);
@@ -169,7 +174,7 @@ export default function MapChallenge() {
     } else {
       setMapState(prev => ({ ...prev, sessionComplete: true }));
     }
-  }, [mapState.currentQuestion, mapState.totalQuestions]);
+  }, [mapState.currentQuestion, mapState.totalQuestions, questions]);
 
   const handleTimeUp = useCallback(() => {
     if (isAnswered) return;
@@ -217,7 +222,13 @@ export default function MapChallenge() {
   const handleCountryClick = (countryCode: string) => {
     if (locationStageComplete || !currentQuestion) return;
     
-    console.log('Country clicked:', countryCode, 'Expected:', currentQuestion.correctAnswer);
+    console.log('=== COUNTRY CLICK DEBUG ===');
+    console.log('Country clicked:', countryCode);
+    console.log('Expected correct answer:', currentQuestion.correctAnswer);
+    console.log('Current question index:', mapState.currentQuestion);
+    console.log('Current question country:', currentQuestion.country.name);
+    console.log('Location stage complete:', locationStageComplete);
+    console.log('===========================');
     
     setSelectedCountry(countryCode);
     const correct = countryCode === currentQuestion.correctAnswer;
