@@ -74,6 +74,7 @@ export default function MapChallenge() {
   });
   
   const currentQuestion = questions[mapState.currentQuestion];
+  console.log('Current question:', mapState.currentQuestion, currentQuestion);
   const progressPercentage = (mapState.currentQuestion / mapState.totalQuestions) * 100;
 
   // Initialize countries when user data loads
@@ -174,6 +175,8 @@ export default function MapChallenge() {
   const handleCountryClick = (countryCode: string) => {
     if (locationStageComplete || !currentQuestion) return;
     
+    console.log('Country clicked:', countryCode, 'Expected:', currentQuestion.correctAnswer);
+    
     setSelectedCountry(countryCode);
     const correct = countryCode === currentQuestion.correctAnswer;
     setLocationWasCorrect(correct);
@@ -237,13 +240,9 @@ export default function MapChallenge() {
 
   const proceedToNextQuestion = () => {
     if (mapState.currentQuestion < mapState.totalQuestions - 1) {
-      setMapState(prev => ({
-        ...prev,
-        currentQuestion: prev.currentQuestion + 1,
-        timeRemaining: 45,
-        questionStartTime: Date.now(),
-      }));
-      // Reset all stage states
+      console.log('Moving to next question:', mapState.currentQuestion + 1);
+      
+      // Reset all stage states first
       setIsAnswered(false);
       setIsCorrect(false);
       setShowResult(false);
@@ -251,6 +250,14 @@ export default function MapChallenge() {
       setUserAnswer("");
       setLocationStageComplete(false);
       setLocationWasCorrect(false);
+      
+      // Then update the question state
+      setMapState(prev => ({
+        ...prev,
+        currentQuestion: prev.currentQuestion + 1,
+        timeRemaining: 45,
+        questionStartTime: Date.now(),
+      }));
     } else {
       setMapState(prev => ({ ...prev, sessionComplete: true }));
     }
