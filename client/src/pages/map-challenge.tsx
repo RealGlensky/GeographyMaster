@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -92,6 +92,48 @@ export default function MapChallenge() {
     }
   }, [countries, mapState.totalQuestions]);
 
+  // Memoized handlers to prevent infinite re-renders
+  const proceedToNextQuestion = useCallback(() => {
+    if (mapState.currentQuestion < mapState.totalQuestions - 1) {
+      console.log('Moving to next question:', mapState.currentQuestion + 1);
+      
+      // Reset all stage states first
+      setIsAnswered(false);
+      setIsCorrect(false);
+      setShowResult(false);
+      setSelectedCountry(null);
+      setUserAnswer("");
+      setLocationStageComplete(false);
+      setLocationWasCorrect(false);
+      
+      // Then update the question state
+      setMapState(prev => ({
+        ...prev,
+        currentQuestion: prev.currentQuestion + 1,
+        timeRemaining: 45,
+        questionStartTime: Date.now(),
+      }));
+    } else {
+      setMapState(prev => ({ ...prev, sessionComplete: true }));
+    }
+  }, [mapState.currentQuestion, mapState.totalQuestions]);
+
+  const handleTimeUp = useCallback(() => {
+    if (isAnswered) return;
+    
+    setIsAnswered(true);
+    setIsCorrect(false);
+    setShowResult(true);
+    
+    // Submit empty answer for time up
+    const responseTime = mapState.questionStartTime ? Date.now() - mapState.questionStartTime : 45000;
+    submitAnswerMutation.mutate({ answer: "", responseTime });
+    
+    setTimeout(() => {
+      proceedToNextQuestion();
+    }, 2000);
+  }, [isAnswered, mapState.questionStartTime, submitAnswerMutation, proceedToNextQuestion]);
+
   // Timer effect
   useEffect(() => {
     if (mapState.gameStarted && !mapState.sessionComplete && mapState.timeRemaining > 0 && !isAnswered) {
@@ -102,7 +144,7 @@ export default function MapChallenge() {
     } else if (mapState.timeRemaining === 0 && !isAnswered) {
       handleTimeUp();
     }
-  }, [mapState.timeRemaining, mapState.gameStarted, mapState.sessionComplete, isAnswered]);
+  }, [mapState.timeRemaining, mapState.gameStarted, mapState.sessionComplete, isAnswered, handleTimeUp]);
 
   // Focus input when new question starts
   useEffect(() => {
@@ -222,46 +264,7 @@ export default function MapChallenge() {
     }, 2500);
   };
 
-  const handleTimeUp = () => {
-    if (isAnswered) return;
-    
-    setIsAnswered(true);
-    setIsCorrect(false);
-    setShowResult(true);
-    
-    // Submit empty answer for time up
-    const responseTime = mapState.questionStartTime ? Date.now() - mapState.questionStartTime : 45000;
-    submitAnswerMutation.mutate({ answer: "", responseTime });
-    
-    setTimeout(() => {
-      proceedToNextQuestion();
-    }, 2000);
-  };
 
-  const proceedToNextQuestion = () => {
-    if (mapState.currentQuestion < mapState.totalQuestions - 1) {
-      console.log('Moving to next question:', mapState.currentQuestion + 1);
-      
-      // Reset all stage states first
-      setIsAnswered(false);
-      setIsCorrect(false);
-      setShowResult(false);
-      setSelectedCountry(null);
-      setUserAnswer("");
-      setLocationStageComplete(false);
-      setLocationWasCorrect(false);
-      
-      // Then update the question state
-      setMapState(prev => ({
-        ...prev,
-        currentQuestion: prev.currentQuestion + 1,
-        timeRemaining: 45,
-        questionStartTime: Date.now(),
-      }));
-    } else {
-      setMapState(prev => ({ ...prev, sessionComplete: true }));
-    }
-  };
 
   const handleRestart = () => {
     setMapState({
