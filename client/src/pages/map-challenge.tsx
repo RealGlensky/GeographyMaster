@@ -74,7 +74,12 @@ export default function MapChallenge() {
   });
   
   const currentQuestion = questions[mapState.currentQuestion];
-  console.log('Current question:', mapState.currentQuestion, currentQuestion);
+  console.log('=== QUESTION STATE DEBUG ===');
+  console.log('Current question index:', mapState.currentQuestion);
+  console.log('Total questions available:', questions.length);
+  console.log('Current question object:', currentQuestion);
+  console.log('All questions:', questions.map(q => ({ country: q.country.name, code: q.correctAnswer })));
+  console.log('=============================');
   const progressPercentage = (mapState.currentQuestion / mapState.totalQuestions) * 100;
 
   // Initialize countries when user data loads
@@ -116,12 +121,26 @@ export default function MapChallenge() {
       return await response.json();
     },
     onSuccess: (data) => {
+      console.log('=== GAME START DEBUG ===');
+      console.log('Session started with ID:', data.sessionId);
+      console.log('Available countries for questions:', countries.length);
+      console.log('Questions already generated:', questions.length);
+      
+      // Regenerate questions to ensure fresh set
+      if (countries.length > 0) {
+        const freshQuestions = generateMapQuestions(countries, mapState.totalQuestions);
+        setQuestions(freshQuestions);
+        console.log('Generated fresh questions:', freshQuestions.map(q => ({ country: q.country.name, code: q.correctAnswer })));
+      }
+      
       setMapState(prev => ({
         ...prev,
         sessionId: data.sessionId,
         gameStarted: true,
         questionStartTime: Date.now(),
+        currentQuestion: 0, // Reset to first question
       }));
+      console.log('========================');
     },
   });
 
@@ -216,6 +235,15 @@ export default function MapChallenge() {
   };
 
   const handleStartGame = () => {
+    // Reset all state before starting
+    setIsAnswered(false);
+    setIsCorrect(false);
+    setShowResult(false);
+    setSelectedCountry(null);
+    setUserAnswer("");
+    setLocationStageComplete(false);
+    setLocationWasCorrect(false);
+    
     startQuizMutation.mutate();
   };
 
