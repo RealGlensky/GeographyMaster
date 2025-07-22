@@ -883,6 +883,17 @@ export default function MapChallenge() {
                     <div className="text-red-600">
                       <XCircle className="w-12 h-12 mx-auto mb-3" />
                       <h4 className="text-lg font-bold mb-2">Not quite!</h4>
+                      
+                      {/* Show what country was actually clicked (for location stage) */}
+                      {selectedCountry && locationStageComplete && !locationWasCorrect && (
+                        <div className="mt-3">
+                          <p className="text-sm text-red-500">
+                            That was {countries.find(c => c.code === selectedCountry)?.name || selectedCountry}
+                          </p>
+                        </div>
+                      )}
+                      
+                      {/* Show correct answer for capital questions */}
                       {currentQuestion?.type === 'name-capital' && (
                         <div className="mt-3 p-3 bg-white rounded-lg">
                           <p className="text-sm text-gray-600">Correct answer:</p>
