@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { Country } from "@shared/schema";
 import { COUNTRY_COORDINATES } from "@shared/country-coordinates";
 
@@ -38,10 +38,10 @@ export function GoogleMapsWorld({
   const [isLoaded, setIsLoaded] = useState(false);
   const markersRef = useRef<Map<string, any>>(new Map()); // Stable marker reference
 
-  // Filter available countries
-  const availableCountries = countries.filter(country => 
-    COUNTRY_COORDINATES[country.code]
-  );
+  // Memoize available countries to prevent infinite re-renders
+  const availableCountries = useMemo(() => {
+    return countries.filter(country => COUNTRY_COORDINATES[country.code]);
+  }, [countries]);
 
   // Load Google Maps script
   useEffect(() => {
@@ -189,9 +189,9 @@ export function GoogleMapsWorld({
       if (markerVisibility === 'always') {
         shouldShowMarker = true;
       } else if (markerVisibility === 'hover') {
-        shouldShowMarker = isHovered || isSelected || (showResult && isTarget);
+        shouldShowMarker = isHovered || isSelected || (!!showResult && isTarget);
       } else if (markerVisibility === 'never') {
-        shouldShowMarker = showResult && isTarget;
+        shouldShowMarker = !!showResult && isTarget;
       }
 
       // Show/hide marker
