@@ -155,8 +155,11 @@ export default function MapChallenge() {
 
   // Memoized handlers to prevent infinite re-renders
   const proceedToNextQuestion = useCallback(() => {
-    if (mapState.currentQuestion < mapState.totalQuestions - 1) {
-      const nextQuestionIndex = mapState.currentQuestion + 1;
+    // Use refs to get latest values and avoid stale closures
+    const latestMapState = mapStateRef.current;
+    
+    if (latestMapState.currentQuestion < latestMapState.totalQuestions - 1) {
+      const nextQuestionIndex = latestMapState.currentQuestion + 1;
       console.log(`Moving to Q${nextQuestionIndex + 1}: ${questions[nextQuestionIndex]?.country.name} (${questions[nextQuestionIndex]?.correctAnswer})`);
       
       // Reset all stage states first
@@ -178,23 +181,27 @@ export default function MapChallenge() {
     } else {
       setMapState(prev => ({ ...prev, sessionComplete: true }));
     }
-  }, [mapState.currentQuestion, mapState.totalQuestions, questions]);
+  }, [questions]); // Only dependency is questions array
 
   const handleTimeUp = useCallback(() => {
-    if (isAnswered) return;
+    // Use refs to get latest values and avoid stale closures
+    const latestIsAnswered = isAnsweredRef.current;
+    const latestMapState = mapStateRef.current;
+    
+    if (latestIsAnswered) return;
     
     setIsAnswered(true);
     setIsCorrect(false);
     setShowResult(true);
     
     // Submit empty answer for time up
-    const responseTime = mapState.questionStartTime ? Date.now() - mapState.questionStartTime : 45000;
+    const responseTime = latestMapState.questionStartTime ? Date.now() - latestMapState.questionStartTime : 45000;
     submitAnswerMutation.mutate({ answer: "", responseTime });
     
     setTimeout(() => {
       proceedToNextQuestion();
     }, 2000);
-  }, [isAnswered, mapState.questionStartTime, submitAnswerMutation, proceedToNextQuestion]);
+  }, [submitAnswerMutation, proceedToNextQuestion]); // Only necessary dependencies
 
   // Timer effect
   useEffect(() => {
@@ -232,10 +239,15 @@ export default function MapChallenge() {
     startQuizMutation.mutate();
   };
 
-  // Use a ref to always get the latest state without dependency issues
+  // Use refs to always get the latest state without dependency issues
   const currentQuestionRef = useRef<MapQuestion | undefined>();
   const currentQuestionIndexRef = useRef<number>(0);
   const locationStageCompleteRef = useRef<boolean>(false);
+  const isAnsweredRef = useRef<boolean>(false);
+  const userAnswerRef = useRef<string>("");
+  const selectedCountryRef = useRef<string | null>(null);
+  const locationWasCorrectRef = useRef<boolean>(false);
+  const mapStateRef = useRef<MapState>(mapState);
 
   // Update refs whenever state changes
   useEffect(() => {
@@ -246,6 +258,26 @@ export default function MapChallenge() {
   useEffect(() => {
     locationStageCompleteRef.current = locationStageComplete;
   }, [locationStageComplete]);
+
+  useEffect(() => {
+    isAnsweredRef.current = isAnswered;
+  }, [isAnswered]);
+
+  useEffect(() => {
+    userAnswerRef.current = userAnswer;
+  }, [userAnswer]);
+
+  useEffect(() => {
+    selectedCountryRef.current = selectedCountry;
+  }, [selectedCountry]);
+
+  useEffect(() => {
+    locationWasCorrectRef.current = locationWasCorrect;
+  }, [locationWasCorrect]);
+
+  useEffect(() => {
+    mapStateRef.current = mapState;
+  }, [mapState]);
 
   // Create a completely fresh handler that always uses current state
   const memoizedCountryClickHandler = useCallback((countryCode: string) => {
@@ -275,39 +307,50 @@ export default function MapChallenge() {
   }, []); // Empty dependency array since we use refs for latest values
 
   const memoizedCountryHoverHandler = useCallback((countryCode: string | null) => {
-    if (!locationStageComplete) {
+    // Use ref to get latest values and avoid stale closures
+    const latestLocationComplete = locationStageCompleteRef.current;
+    if (!latestLocationComplete) {
       setHoveredCountry(countryCode);
     }
-  }, [locationStageComplete]);
+  }, []); // Empty dependency array since we use refs for latest values
 
-  const handleAnswerSubmit = () => {
-    if (!locationStageComplete || isAnswered || !userAnswer.trim() || !currentQuestion) return;
+  const handleAnswerSubmit = useCallback(() => {
+    // Use refs to get latest values and avoid stale closures
+    const latestLocationComplete = locationStageCompleteRef.current;
+    const latestIsAnswered = isAnsweredRef.current;
+    const latestUserAnswer = userAnswerRef.current;
+    const latestCurrentQuestion = currentQuestionRef.current;
+    const latestSelectedCountry = selectedCountryRef.current;
+    const latestLocationWasCorrect = locationWasCorrectRef.current;
+    const latestMapState = mapStateRef.current;
     
-    const capitalCorrect = isTypingCorrect(userAnswer, currentQuestion.country.capital);
+    if (!latestLocationComplete || latestIsAnswered || !latestUserAnswer.trim() || !latestCurrentQuestion) return;
+    
+    const capitalCorrect = isTypingCorrect(latestUserAnswer, latestCurrentQuestion.country.capital);
     setIsCorrect(capitalCorrect);
     setIsAnswered(true);
     setShowResult(true);
     
     // Score calculation: both stages must be correct for full point
-    if (locationWasCorrect && capitalCorrect) {
+    if (latestLocationWasCorrect && capitalCorrect) {
       setMapState(prev => ({ ...prev, score: prev.score + 1 }));
     }
 
     // Submit combined answer to backend
-    const responseTime = mapState.questionStartTime ? Date.now() - mapState.questionStartTime : 0;
-    const combinedAnswer = `${selectedCountry}|${userAnswer}`;
-    const overallCorrect = locationWasCorrect && capitalCorrect;
+    const responseTime = latestMapState.questionStartTime ? Date.now() - latestMapState.questionStartTime : 0;
+    const combinedAnswer = `${latestSelectedCountry}|${latestUserAnswer}`;
+    const overallCorrect = latestLocationWasCorrect && capitalCorrect;
     submitAnswerMutation.mutate({ 
       answer: combinedAnswer, 
       responseTime,
-      countryCode: currentQuestion.country.code,
+      countryCode: latestCurrentQuestion.country.code,
       correct: overallCorrect
     });
     
     setTimeout(() => {
       proceedToNextQuestion();
     }, 2500);
-  };
+  }, [submitAnswerMutation]); // Only dependency is the mutation function
 
 
 
