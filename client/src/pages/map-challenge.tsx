@@ -452,7 +452,7 @@ export default function MapChallenge() {
                     <div className="text-left">
                       <h4 className="text-xl font-semibold text-gray-900 mb-2">🌍 Expert Mode</h4>
                       <p className="text-gray-600">
-                        No markers or hints - Pure geography knowledge test using only real country borders and shapes
+                        No markers, hints, or country labels - Pure geography knowledge test using only country borders and shapes
                       </p>
                     </div>
                     <Badge className="bg-red-100 text-red-800">Hardest</Badge>
@@ -720,6 +720,7 @@ export default function MapChallenge() {
                       mapDifficulty === 'guided' ? 'always' : 
                       mapDifficulty === 'intermediate' ? 'hover' : 'never'
                     }
+                    hideLabels={mapDifficulty === 'expert'}
                     onCountryClick={memoizedCountryClickHandler}
                     onCountryHover={memoizedCountryHoverHandler}
                   />
@@ -735,6 +736,7 @@ export default function MapChallenge() {
                       mapDifficulty === 'guided' ? 'always' : 
                       mapDifficulty === 'intermediate' ? 'hover' : 'never'
                     }
+                    hideLabels={mapDifficulty === 'expert'}
                     onCountryClick={memoizedCountryClickHandler}
                     onCountryHover={memoizedCountryHoverHandler}
                   />

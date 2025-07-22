@@ -10,6 +10,7 @@ interface LeafletWorldMapProps {
   showResult?: boolean;
   isCorrect?: boolean;
   markerVisibility?: 'always' | 'hover' | 'never';
+  hideLabels?: boolean;
   onCountryClick?: (countryCode: string) => void;
   onCountryHover?: (countryCode: string | null) => void;
 }
@@ -28,6 +29,7 @@ export function LeafletWorldMap({
   showResult,
   isCorrect,
   markerVisibility = 'always',
+  hideLabels = false,
   onCountryClick,
   onCountryHover
 }: LeafletWorldMapProps) {
@@ -83,10 +85,19 @@ export function LeafletWorldMap({
       dragging: true
     });
 
-    // Add tile layer with custom styling
-    window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
-      className: 'map-tiles'
+    // Choose tile layer based on whether labels should be hidden
+    const tileUrl = hideLabels 
+      ? 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png' // No labels for expert mode
+      : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'; // Standard with labels
+
+    const attribution = hideLabels
+      ? '© OpenStreetMap contributors, © CARTO'
+      : '© OpenStreetMap contributors';
+
+    // Add tile layer with conditional styling
+    window.L.tileLayer(tileUrl, {
+      attribution,
+      className: hideLabels ? 'map-tiles-expert' : 'map-tiles'
     }).addTo(leafletMap);
 
     setMap(leafletMap);
@@ -94,7 +105,7 @@ export function LeafletWorldMap({
     return () => {
       leafletMap.remove();
     };
-  }, [isLoaded]);
+  }, [isLoaded, hideLabels]);
 
   // Update markers with debouncing
   useEffect(() => {

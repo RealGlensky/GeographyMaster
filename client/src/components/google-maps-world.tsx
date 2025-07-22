@@ -10,6 +10,7 @@ interface GoogleMapsWorldProps {
   showResult?: boolean;
   isCorrect?: boolean;
   markerVisibility?: 'always' | 'hover' | 'never';
+  hideLabels?: boolean;
   onCountryClick?: (countryCode: string) => void;
   onCountryHover?: (countryCode: string | null) => void;
 }
@@ -29,6 +30,7 @@ export function GoogleMapsWorld({
   showResult,
   isCorrect,
   markerVisibility = 'always',
+  hideLabels = false,
   onCountryClick,
   onCountryHover
 }: GoogleMapsWorldProps) {
@@ -76,37 +78,69 @@ export function GoogleMapsWorld({
   useEffect(() => {
     if (!isLoaded || !mapRef.current || !window.google) return;
 
+    // Base styles that apply to all modes
+    const baseStyles = [
+      {
+        featureType: 'water',
+        elementType: 'geometry',
+        stylers: [{ color: '#e0f2fe' }]
+      },
+      {
+        featureType: 'landscape',
+        elementType: 'geometry',
+        stylers: [{ color: '#f8fafc' }]
+      },
+      {
+        featureType: 'road',
+        stylers: [{ visibility: 'off' }]
+      },
+      {
+        featureType: 'poi',
+        stylers: [{ visibility: 'off' }]
+      },
+      {
+        featureType: 'transit',
+        stylers: [{ visibility: 'off' }]
+      },
+      {
+        featureType: 'administrative.locality',
+        stylers: [{ visibility: 'off' }]
+      }
+    ];
+
+    // Additional styles for expert mode (hide all labels)
+    const expertStyles = hideLabels ? [
+      {
+        featureType: 'administrative.country',
+        elementType: 'labels',
+        stylers: [{ visibility: 'off' }]
+      },
+      {
+        featureType: 'administrative.province',
+        elementType: 'labels',
+        stylers: [{ visibility: 'off' }]
+      },
+      {
+        featureType: 'administrative.land_parcel',
+        elementType: 'labels',
+        stylers: [{ visibility: 'off' }]
+      },
+      {
+        featureType: 'water',
+        elementType: 'labels',
+        stylers: [{ visibility: 'simplified' }] // Keep ocean names only
+      },
+      {
+        featureType: 'natural',
+        elementType: 'labels',
+        stylers: [{ visibility: 'off' }]
+      }
+    ] : [];
+
     const googleMap = new window.google.maps.Map(mapRef.current, {
       zoom: 2,
       center: { lat: 20, lng: 0 },
-      styles: [
-        {
-          featureType: 'water',
-          elementType: 'geometry',
-          stylers: [{ color: '#e0f2fe' }]
-        },
-        {
-          featureType: 'landscape',
-          elementType: 'geometry',
-          stylers: [{ color: '#f8fafc' }]
-        },
-        {
-          featureType: 'road',
-          stylers: [{ visibility: 'off' }]
-        },
-        {
-          featureType: 'poi',
-          stylers: [{ visibility: 'off' }]
-        },
-        {
-          featureType: 'transit',
-          stylers: [{ visibility: 'off' }]
-        },
-        {
-          featureType: 'administrative.locality',
-          stylers: [{ visibility: 'off' }]
-        }
-      ],
+      styles: [...baseStyles, ...expertStyles],
       disableDefaultUI: true,
       gestureHandling: 'cooperative',
       zoomControl: true,
@@ -116,7 +150,7 @@ export function GoogleMapsWorld({
     });
 
     setMap(googleMap);
-  }, [isLoaded]);
+  }, [isLoaded, hideLabels]);
 
   // Initialize markers once and keep them stable
   useEffect(() => {
