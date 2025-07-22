@@ -131,7 +131,7 @@ export function GoogleMapsWorld({
         stylers: [{ visibility: 'simplified' }] // Keep ocean names only
       },
       {
-        featureType: 'natural',
+        featureType: 'landscape.natural',
         elementType: 'labels',
         stylers: [{ visibility: 'off' }]
       }

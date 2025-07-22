@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { X, CheckCircle, XCircle, MapPin, Globe, Timer, RotateCcw, Home } from "lucide-react";
 import { Difficulty, Country, User } from "@shared/schema";
-import { getCountriesByDifficulty } from "@/data/countries";
+import { getCountriesByDifficulty, getAvailableCountries } from "@/data/countries";
 import { CountryFlag } from "@/components/country-flag";
 import { PronunciationButton } from "@/components/pronunciation-button";
 import { GoogleMapsWorld } from "@/components/google-maps-world";
@@ -62,7 +62,8 @@ export default function MapChallenge() {
     queryKey: ["/api/user"],
   });
   
-  const [countries, setCountries] = useState<Country[]>([]);
+  const [countries, setCountries] = useState<Country[]>([]); // Countries for questions
+  const [clickableCountries, setClickableCountries] = useState<Country[]>([]); // Countries that can be clicked on map
   const [questions, setQuestions] = useState<MapQuestion[]>([]);
   const [userAnswer, setUserAnswer] = useState("");
   const [isAnswered, setIsAnswered] = useState(false);
@@ -97,6 +98,21 @@ export default function MapChallenge() {
     const availableCountries = getCountriesByDifficulty(difficulty, excludedCountries);
     setCountries(availableCountries);
   }, [user, difficulty]);
+
+  // Set clickable countries based on map difficulty
+  useEffect(() => {
+    const excludedCountries = user?.excludedCountries || [];
+    
+    if (mapDifficulty === 'expert') {
+      // Expert mode: Allow clicking ANY country on the map
+      const allCountries = getAvailableCountries(excludedCountries);
+      setClickableCountries(allCountries);
+    } else {
+      // Guided and Intermediate modes: Only allow clicking countries from the current difficulty level
+      const levelCountries = getCountriesByDifficulty(difficulty, excludedCountries);
+      setClickableCountries(levelCountries);
+    }
+  }, [user, difficulty, mapDifficulty]);
 
   // Generate questions when countries are loaded
   useEffect(() => {
@@ -710,7 +726,7 @@ export default function MapChallenge() {
                 {/* Map Component - Switch between Google Maps and OpenStreetMap */}
                 {useGoogleMaps ? (
                   <GoogleMapsWorld
-                    countries={countries}
+                    countries={clickableCountries}
                     selectedCountry={selectedCountry}
                     hoveredCountry={hoveredCountry}
                     targetCountry={currentQuestion?.country.code}
@@ -726,7 +742,7 @@ export default function MapChallenge() {
                   />
                 ) : (
                   <LeafletWorldMap
-                    countries={countries}
+                    countries={clickableCountries}
                     selectedCountry={selectedCountry}
                     hoveredCountry={hoveredCountry}
                     targetCountry={currentQuestion?.country.code}
@@ -896,7 +912,7 @@ export default function MapChallenge() {
                       {selectedCountry && locationStageComplete && !locationWasCorrect && !isAnswered && (
                         <div className="mt-3">
                           <p className="text-sm text-red-500">
-                            That was {countries.find(c => c.code === selectedCountry)?.name || selectedCountry}
+                            That was {clickableCountries.find(c => c.code === selectedCountry)?.name || selectedCountry}
                           </p>
                         </div>
                       )}
