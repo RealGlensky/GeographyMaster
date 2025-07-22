@@ -232,13 +232,16 @@ export default function MapChallenge() {
     startQuizMutation.mutate();
   };
 
-  const handleCountryClick = (countryCode: string) => {
-    if (locationStageComplete || !currentQuestion) return;
+  const handleCountryClick = useCallback((countryCode: string) => {
+    // Get current question from latest state to avoid stale closure
+    const latestQuestion = questions[mapState.currentQuestion];
     
-    console.log(`Q${mapState.currentQuestion + 1}: Clicked ${countryCode}, Expected ${currentQuestion.correctAnswer} (${currentQuestion.country.name})`);
+    if (locationStageComplete || !latestQuestion) return;
+    
+    console.log(`Q${mapState.currentQuestion + 1}: Clicked ${countryCode}, Expected ${latestQuestion.correctAnswer} (${latestQuestion.country.name})`);
     
     setSelectedCountry(countryCode);
-    const correct = countryCode === currentQuestion.correctAnswer;
+    const correct = countryCode === latestQuestion.correctAnswer;
     setLocationWasCorrect(correct);
     setLocationStageComplete(true);
     setShowResult(true);
@@ -251,7 +254,7 @@ export default function MapChallenge() {
         inputRef.current.focus();
       }
     }, 1500);
-  };
+  }, [locationStageComplete, questions, mapState.currentQuestion]);
 
   const handleAnswerSubmit = () => {
     if (!locationStageComplete || isAnswered || !userAnswer.trim() || !currentQuestion) return;
