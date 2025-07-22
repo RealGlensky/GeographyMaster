@@ -123,30 +123,31 @@ export function LeafletWorldMap({
         shouldShowMarker = showResult && isTarget; // Only show when revealing answer
       }
 
-      if (!shouldShowMarker) {
-        return null; // Don't create marker
-      }
-
       let color = '#3b82f6';
       let size = 6;
-      let opacity = 0.6;
+      let opacity = shouldShowMarker ? 0.6 : 0; // Make invisible if not supposed to show
+      let strokeOpacity = shouldShowMarker ? 1 : 0; // Make stroke invisible too
 
       if (showResult && isTarget && isCorrect) {
         color = '#10b981';
         size = 10;
         opacity = 0.9;
+        strokeOpacity = 1;
       } else if (showResult && isSelected && !isCorrect) {
         color = '#ef4444';
         size = 10;
         opacity = 0.9;
+        strokeOpacity = 1;
       } else if (isSelected) {
         color = '#2563eb';
         size = 8;
-        opacity = 0.8;
+        opacity = shouldShowMarker ? 0.8 : 0;
+        strokeOpacity = shouldShowMarker ? 1 : 0;
       } else if (isHovered) {
         color = '#1d4ed8';
         size = 7;
-        opacity = 0.7;
+        opacity = shouldShowMarker ? 0.7 : 0;
+        strokeOpacity = shouldShowMarker ? 1 : 0;
       }
 
       const marker = window.L.circleMarker([coordinates.lat, coordinates.lng], {
@@ -155,7 +156,7 @@ export function LeafletWorldMap({
         fillOpacity: opacity,
         color: '#ffffff',
         weight: 1,
-        opacity: 1
+        opacity: strokeOpacity
       }).addTo(map);
 
       // Add click listener

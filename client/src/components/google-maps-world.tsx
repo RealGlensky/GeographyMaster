@@ -184,7 +184,10 @@ export function GoogleMapsWorld({
       const isSelected = selectedCountry === countryCode;
       const isHovered = hoveredCountry === countryCode;
 
-      // Determine visibility
+      // Always keep marker on map for click detection
+      marker.setMap(map);
+      
+      // Determine visibility for styling (but keep marker always clickable)
       let shouldShowMarker = false;
       if (markerVisibility === 'always') {
         shouldShowMarker = true;
@@ -194,48 +197,48 @@ export function GoogleMapsWorld({
         shouldShowMarker = !!showResult && isTarget;
       }
 
-      // Show/hide marker
-      marker.setMap(shouldShowMarker ? map : null);
+      // Always update marker style (visible or invisible)
+      let icon = {
+        path: window.google.maps.SymbolPath.CIRCLE,
+        scale: 8,
+        fillColor: '#3b82f6',
+        fillOpacity: shouldShowMarker ? 0.6 : 0, // Make invisible if not supposed to show
+        strokeWeight: 1,
+        strokeColor: '#ffffff',
+        strokeOpacity: shouldShowMarker ? 1 : 0 // Make stroke invisible too
+      };
 
-      if (shouldShowMarker) {
-        // Update marker style
-        let icon = {
-          path: window.google.maps.SymbolPath.CIRCLE,
-          scale: 8,
-          fillColor: '#3b82f6',
-          fillOpacity: 0.6,
-          strokeWeight: 1,
-          strokeColor: '#ffffff'
-        };
-
-        if (showResult && isTarget && isCorrect) {
-          icon.fillColor = '#10b981';
-          icon.strokeColor = '#ffffff';
-          icon.scale = 12;
-          icon.fillOpacity = 0.9;
-          icon.strokeWeight = 2;
-        } else if (showResult && isSelected && !isCorrect) {
-          icon.fillColor = '#ef4444';
-          icon.strokeColor = '#ffffff';
-          icon.scale = 12;
-          icon.fillOpacity = 0.9;
-          icon.strokeWeight = 2;
-        } else if (isSelected) {
-          icon.fillColor = '#2563eb';
-          icon.strokeColor = '#ffffff';
-          icon.scale = 10;
-          icon.fillOpacity = 0.8;
-          icon.strokeWeight = 2;
-        } else if (isHovered) {
-          icon.fillColor = '#1d4ed8';
-          icon.strokeColor = '#ffffff';
-          icon.scale = 9;
-          icon.fillOpacity = 0.7;
-        }
-
-        marker.setIcon(icon);
-        marker.setZIndex(isSelected || isHovered || (showResult && isTarget) ? 2000 : 1000);
+      if (showResult && isTarget && isCorrect) {
+        icon.fillColor = '#10b981';
+        icon.strokeColor = '#ffffff';
+        icon.scale = 12;
+        icon.fillOpacity = 0.9;
+        icon.strokeOpacity = 1;
+        icon.strokeWeight = 2;
+      } else if (showResult && isSelected && !isCorrect) {
+        icon.fillColor = '#ef4444';
+        icon.strokeColor = '#ffffff';
+        icon.scale = 12;
+        icon.fillOpacity = 0.9;
+        icon.strokeOpacity = 1;
+        icon.strokeWeight = 2;
+      } else if (isSelected) {
+        icon.fillColor = '#2563eb';
+        icon.strokeColor = '#ffffff';
+        icon.scale = 10;
+        icon.fillOpacity = shouldShowMarker ? 0.8 : 0;
+        icon.strokeOpacity = shouldShowMarker ? 1 : 0;
+        icon.strokeWeight = 2;
+      } else if (isHovered) {
+        icon.fillColor = '#1d4ed8';
+        icon.strokeColor = '#ffffff';
+        icon.scale = 9;
+        icon.fillOpacity = shouldShowMarker ? 0.7 : 0;
+        icon.strokeOpacity = shouldShowMarker ? 1 : 0;
       }
+
+      marker.setIcon(icon);
+      marker.setZIndex(isSelected || isHovered || (showResult && isTarget) ? 2000 : 1000);
     });
   }, [map, markerVisibility, selectedCountry, hoveredCountry, targetCountry, showResult, isCorrect]);
 
