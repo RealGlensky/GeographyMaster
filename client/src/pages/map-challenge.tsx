@@ -232,13 +232,31 @@ export default function MapChallenge() {
     startQuizMutation.mutate();
   };
 
-  const handleCountryClick = useCallback((countryCode: string) => {
-    // Get current question from latest state to avoid stale closure
-    const latestQuestion = questions[mapState.currentQuestion];
+  // Use a ref to always get the latest state without dependency issues
+  const currentQuestionRef = useRef<MapQuestion | undefined>();
+  const currentQuestionIndexRef = useRef<number>(0);
+  const locationStageCompleteRef = useRef<boolean>(false);
+
+  // Update refs whenever state changes
+  useEffect(() => {
+    currentQuestionRef.current = questions[mapState.currentQuestion];
+    currentQuestionIndexRef.current = mapState.currentQuestion;
+  }, [questions, mapState.currentQuestion]);
+
+  useEffect(() => {
+    locationStageCompleteRef.current = locationStageComplete;
+  }, [locationStageComplete]);
+
+  // Create a completely fresh handler that always uses current state
+  const memoizedCountryClickHandler = useCallback((countryCode: string) => {
+    // Always get the latest values from refs to avoid stale closures
+    const latestQuestion = currentQuestionRef.current;
+    const latestQuestionIndex = currentQuestionIndexRef.current;
+    const isLocationComplete = locationStageCompleteRef.current;
     
-    if (locationStageComplete || !latestQuestion) return;
+    if (isLocationComplete || !latestQuestion) return;
     
-    console.log(`Q${mapState.currentQuestion + 1}: Clicked ${countryCode}, Expected ${latestQuestion.correctAnswer} (${latestQuestion.country.name})`);
+    console.log(`Q${latestQuestionIndex + 1}: Clicked ${countryCode}, Expected ${latestQuestion.correctAnswer} (${latestQuestion.country.name})`);
     
     setSelectedCountry(countryCode);
     const correct = countryCode === latestQuestion.correctAnswer;
@@ -254,14 +272,7 @@ export default function MapChallenge() {
         inputRef.current.focus();
       }
     }, 1500);
-  }, [locationStageComplete, questions, mapState.currentQuestion]);
-
-  // Memoize the callback functions to prevent inline function recreation
-  const memoizedCountryClickHandler = useCallback((countryCode: string) => {
-    if (!locationStageComplete) {
-      handleCountryClick(countryCode);
-    }
-  }, [locationStageComplete, handleCountryClick]);
+  }, []); // Empty dependency array since we use refs for latest values
 
   const memoizedCountryHoverHandler = useCallback((countryCode: string | null) => {
     if (!locationStageComplete) {
