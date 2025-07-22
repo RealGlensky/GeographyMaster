@@ -871,9 +871,15 @@ export default function MapChallenge() {
 
             {/* Result Feedback */}
             {showResult && (
-              <Card className={isCorrect ? "border-green-500 bg-green-50" : "border-red-500 bg-red-50"}>
+              <Card className={
+                // Use appropriate correctness variable based on stage
+                (isAnswered ? isCorrect : locationWasCorrect) 
+                  ? "border-green-500 bg-green-50" 
+                  : "border-red-500 bg-red-50"
+              }>
                 <CardContent className="p-6 text-center">
-                  {isCorrect ? (
+                  {/* Use appropriate correctness variable based on stage */}
+                  {(isAnswered ? isCorrect : locationWasCorrect) ? (
                     <div className="text-green-600">
                       <CheckCircle className="w-12 h-12 mx-auto mb-3" />
                       <h4 className="text-lg font-bold mb-2">Excellent!</h4>
@@ -885,7 +891,7 @@ export default function MapChallenge() {
                       <h4 className="text-lg font-bold mb-2">Not quite!</h4>
                       
                       {/* Show what country was actually clicked (for location stage) */}
-                      {selectedCountry && locationStageComplete && !locationWasCorrect && (
+                      {selectedCountry && locationStageComplete && !locationWasCorrect && !isAnswered && (
                         <div className="mt-3">
                           <p className="text-sm text-red-500">
                             That was {countries.find(c => c.code === selectedCountry)?.name || selectedCountry}
@@ -894,12 +900,12 @@ export default function MapChallenge() {
                       )}
                       
                       {/* Show correct answer for capital questions */}
-                      {currentQuestion?.type === 'name-capital' && (
+                      {isAnswered && !isCorrect && (
                         <div className="mt-3 p-3 bg-white rounded-lg">
                           <p className="text-sm text-gray-600">Correct answer:</p>
-                          <p className="font-bold text-gray-900">{currentQuestion.correctAnswer}</p>
+                          <p className="font-bold text-gray-900">{currentQuestion?.country.capital}</p>
                           <PronunciationButton 
-                            text={currentQuestion.correctAnswer} 
+                            text={currentQuestion?.country.capital || ""} 
                             className="mt-2"
                           />
                         </div>
