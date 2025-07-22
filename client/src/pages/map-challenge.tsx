@@ -256,6 +256,19 @@ export default function MapChallenge() {
     }, 1500);
   }, [locationStageComplete, questions, mapState.currentQuestion]);
 
+  // Memoize the callback functions to prevent inline function recreation
+  const memoizedCountryClickHandler = useCallback((countryCode: string) => {
+    if (!locationStageComplete) {
+      handleCountryClick(countryCode);
+    }
+  }, [locationStageComplete, handleCountryClick]);
+
+  const memoizedCountryHoverHandler = useCallback((countryCode: string | null) => {
+    if (!locationStageComplete) {
+      setHoveredCountry(countryCode);
+    }
+  }, [locationStageComplete]);
+
   const handleAnswerSubmit = () => {
     if (!locationStageComplete || isAnswered || !userAnswer.trim() || !currentQuestion) return;
     
@@ -653,16 +666,8 @@ export default function MapChallenge() {
                       mapDifficulty === 'guided' ? 'always' : 
                       mapDifficulty === 'intermediate' ? 'hover' : 'never'
                     }
-                    onCountryClick={(countryCode) => {
-                      if (!locationStageComplete) {
-                        handleCountryClick(countryCode);
-                      }
-                    }}
-                    onCountryHover={(countryCode) => {
-                      if (!locationStageComplete) {
-                        setHoveredCountry(countryCode);
-                      }
-                    }}
+                    onCountryClick={memoizedCountryClickHandler}
+                    onCountryHover={memoizedCountryHoverHandler}
                   />
                 ) : (
                   <LeafletWorldMap
@@ -676,16 +681,8 @@ export default function MapChallenge() {
                       mapDifficulty === 'guided' ? 'always' : 
                       mapDifficulty === 'intermediate' ? 'hover' : 'never'
                     }
-                    onCountryClick={(countryCode) => {
-                      if (!locationStageComplete) {
-                        handleCountryClick(countryCode);
-                      }
-                    }}
-                    onCountryHover={(countryCode) => {
-                      if (!locationStageComplete) {
-                        setHoveredCountry(countryCode);
-                      }
-                    }}
+                    onCountryClick={memoizedCountryClickHandler}
+                    onCountryHover={memoizedCountryHoverHandler}
                   />
                 )}
                 
