@@ -734,9 +734,9 @@ export default function MapChallenge() {
                     isCorrect={locationWasCorrect}
                     markerVisibility={
                       mapDifficulty === 'guided' ? 'always' : 
-                      mapDifficulty === 'intermediate' ? 'hover' : 'never'
+                      mapDifficulty === 'intermediate' ? 'always' : 'never'
                     }
-                    hideLabels={mapDifficulty === 'expert'}
+                    hideLabels={mapDifficulty === 'expert' || mapDifficulty === 'intermediate'}
                     onCountryClick={memoizedCountryClickHandler}
                     onCountryHover={memoizedCountryHoverHandler}
                   />
@@ -750,9 +750,9 @@ export default function MapChallenge() {
                     isCorrect={locationWasCorrect}
                     markerVisibility={
                       mapDifficulty === 'guided' ? 'always' : 
-                      mapDifficulty === 'intermediate' ? 'hover' : 'never'
+                      mapDifficulty === 'intermediate' ? 'always' : 'never'
                     }
-                    hideLabels={mapDifficulty === 'expert'}
+                    hideLabels={mapDifficulty === 'expert' || mapDifficulty === 'intermediate'}
                     onCountryClick={memoizedCountryClickHandler}
                     onCountryHover={memoizedCountryHoverHandler}
                   />
