@@ -172,7 +172,7 @@ export function GoogleMapsWorld({
           strokeWeight: 1,
           strokeColor: '#ffffff'
         },
-        title: country.name,
+
         zIndex: 1000,
         clickable: true,
         optimized: false
