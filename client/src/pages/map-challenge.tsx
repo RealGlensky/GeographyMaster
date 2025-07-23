@@ -767,14 +767,7 @@ export default function MapChallenge() {
                   </div>
                 )}
                 
-                {/* Country name reveal in bottom corner (only after clicking) */}
-                {selectedCountry && locationStageComplete && hoveredCountry && (
-                  <div className="absolute bottom-4 left-4 bg-white rounded-lg p-3 shadow-lg border z-10">
-                    <p className="text-sm font-medium text-gray-900">
-                      {countries.find(c => c.code === hoveredCountry)?.name || hoveredCountry}
-                    </p>
-                  </div>
-                )}
+
               </CardContent>
             </Card>
           </div>
