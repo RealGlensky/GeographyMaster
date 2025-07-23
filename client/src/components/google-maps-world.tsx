@@ -321,14 +321,7 @@ export function GoogleMapsWorld({
         </div>
       </div>
 
-      {/* Country info overlay */}
-      {hoveredCountry && !showResult && (
-        <div className="absolute bottom-4 left-4 bg-white rounded-lg p-3 shadow-lg border">
-          <p className="text-sm font-medium text-gray-900">
-            {COUNTRY_COORDINATES[hoveredCountry]?.name || hoveredCountry}
-          </p>
-        </div>
-      )}
+
     </div>
   );
 }

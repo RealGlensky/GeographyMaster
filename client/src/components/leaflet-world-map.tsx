@@ -129,9 +129,9 @@ export function LeafletWorldMap({
       if (markerVisibility === 'always') {
         shouldShowMarker = true;
       } else if (markerVisibility === 'hover') {
-        shouldShowMarker = isHovered || isSelected || (showResult && isTarget);
+        shouldShowMarker = isHovered || isSelected || (!!showResult && isTarget);
       } else if (markerVisibility === 'never') {
-        shouldShowMarker = showResult && isTarget; // Only show when revealing answer
+        shouldShowMarker = !!showResult && isTarget; // Only show when revealing answer
       }
 
       let color = '#3b82f6';
