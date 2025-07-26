@@ -367,7 +367,13 @@ export default function DynamicQuizPage() {
                   }`}>
                     {currentCountry.name}
                   </h3>
-                  <p className="text-sm text-gray-600">{currentCountry.continent}</p>
+                  <p className={`text-sm ${
+                    currentQuestionData.type === 'country-to-capital' || currentQuestionData.type === 'capital-to-country'
+                      ? 'text-gray-400 filter blur-sm' 
+                      : 'text-gray-600'
+                  }`}>
+                    {currentCountry.continent}
+                  </p>
                 </div>
               </div>
               <div className="text-right">
@@ -390,17 +396,13 @@ export default function DynamicQuizPage() {
         <Card className="mb-6">
           <CardContent className="p-8">
             <div className="text-center mb-8">
-              <h2 className={`text-2xl font-bold mb-4 flex items-center justify-center gap-3 ${
-                currentQuestionData.type === 'country-to-capital'
-                  ? 'text-gray-400 filter blur-sm' 
-                  : 'text-gray-900'
-              }`}>
+              <h2 className="text-2xl font-bold mb-4 flex items-center justify-center gap-3 text-gray-900">
                 {currentQuestionData.type === 'country-to-capital' ? (
                   <>
                     <img 
                       src={`https://flagcdn.com/w40/${currentCountry?.code.toLowerCase()}.png`}
                       alt={`${currentQuestionData.country} flag`}
-                      className="w-8 h-6 object-cover rounded shadow-sm filter grayscale blur-sm opacity-50"
+                      className="w-8 h-6 object-cover rounded shadow-sm"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.style.display = 'none';
