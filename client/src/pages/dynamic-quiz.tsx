@@ -350,7 +350,7 @@ export default function DynamicQuizPage() {
                   src={`https://flagcdn.com/w40/${currentCountry.code.toLowerCase()}.png`}
                   alt={`${currentCountry.name} flag`}
                   className={`w-8 h-6 object-cover rounded shadow-sm ${
-                    currentQuestionData.type === 'country-to-capital' 
+                    currentQuestionData.type === 'country-to-capital' || currentQuestionData.type === 'capital-to-country'
                       ? 'filter grayscale blur-sm opacity-50' 
                       : ''
                   }`}
@@ -361,7 +361,7 @@ export default function DynamicQuizPage() {
                 />
                 <div>
                   <h3 className={`font-semibold ${
-                    currentQuestionData.type === 'country-to-capital' 
+                    currentQuestionData.type === 'country-to-capital' || currentQuestionData.type === 'capital-to-country'
                       ? 'text-gray-400 filter blur-sm' 
                       : 'text-gray-900'
                   }`}>
@@ -391,7 +391,7 @@ export default function DynamicQuizPage() {
           <CardContent className="p-8">
             <div className="text-center mb-8">
               <h2 className={`text-2xl font-bold mb-4 flex items-center justify-center gap-3 ${
-                currentQuestionData.type === 'country-to-capital' 
+                currentQuestionData.type === 'country-to-capital'
                   ? 'text-gray-400 filter blur-sm' 
                   : 'text-gray-900'
               }`}>
