@@ -161,12 +161,16 @@ export default function Quiz() {
                       countryCode={countries.find(c => c.name === currentQuestionData.country)?.code || ''} 
                       countryName={currentQuestionData.country || ''} 
                       size="lg"
-                      className="mx-auto mb-2"
+                      className="mx-auto mb-2 filter grayscale blur-sm opacity-50"
                     />
                   )}
                 </div>
                 <div className="flex items-center justify-center gap-2 mb-2">
-                  <h3 className="text-2xl font-bold text-gray-900">
+                  <h3 className={`text-2xl font-bold ${
+                    currentQuestionData?.type === "country-to-capital" 
+                      ? "text-gray-400 filter blur-sm" 
+                      : "text-gray-900"
+                  }`}>
                     {currentQuestionData?.type === "country-to-capital"
                       ? `What is the capital of ${currentQuestionData.country}?`
                       : `Which country has ${currentQuestionData?.capital} as its capital?`

@@ -349,14 +349,24 @@ export default function DynamicQuizPage() {
                 <img 
                   src={`https://flagcdn.com/w40/${currentCountry.code.toLowerCase()}.png`}
                   alt={`${currentCountry.name} flag`}
-                  className="w-8 h-6 object-cover rounded shadow-sm"
+                  className={`w-8 h-6 object-cover rounded shadow-sm ${
+                    currentQuestionData.type === 'country-to-capital' 
+                      ? 'filter grayscale blur-sm opacity-50' 
+                      : ''
+                  }`}
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';
                   }}
                 />
                 <div>
-                  <h3 className="font-semibold text-gray-900">{currentCountry.name}</h3>
+                  <h3 className={`font-semibold ${
+                    currentQuestionData.type === 'country-to-capital' 
+                      ? 'text-gray-400 filter blur-sm' 
+                      : 'text-gray-900'
+                  }`}>
+                    {currentCountry.name}
+                  </h3>
                   <p className="text-sm text-gray-600">{currentCountry.continent}</p>
                 </div>
               </div>
@@ -380,13 +390,17 @@ export default function DynamicQuizPage() {
         <Card className="mb-6">
           <CardContent className="p-8">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center justify-center gap-3">
+              <h2 className={`text-2xl font-bold mb-4 flex items-center justify-center gap-3 ${
+                currentQuestionData.type === 'country-to-capital' 
+                  ? 'text-gray-400 filter blur-sm' 
+                  : 'text-gray-900'
+              }`}>
                 {currentQuestionData.type === 'country-to-capital' ? (
                   <>
                     <img 
                       src={`https://flagcdn.com/w40/${currentCountry?.code.toLowerCase()}.png`}
                       alt={`${currentQuestionData.country} flag`}
-                      className="w-8 h-6 object-cover rounded shadow-sm"
+                      className="w-8 h-6 object-cover rounded shadow-sm filter grayscale blur-sm opacity-50"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.style.display = 'none';
