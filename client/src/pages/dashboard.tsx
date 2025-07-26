@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ProgressCard } from "@/components/progress-card";
 import { StudyModeCard } from "@/components/study-mode-card";
-import { DifficultySelector } from "@/components/difficulty-selector";
+
 import { AchievementItem } from "@/components/achievement-item";
 import { 
   CheckCircle, 
@@ -20,12 +20,11 @@ import {
   MapPin 
 } from "lucide-react";
 import { useState } from "react";
-import { Difficulty } from "@shared/schema";
 import { formatStudyTime } from "@/lib/utils";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
-  const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty | null>(null);
+
 
   const { data: user } = useQuery({
     queryKey: ["/api/user"],
@@ -48,11 +47,8 @@ export default function Dashboard() {
   });
 
   const startStudyMode = (mode: string) => {
-    if (!selectedDifficulty) {
-      alert("Please select a difficulty level first!");
-      return;
-    }
-    setLocation(`/${mode}?difficulty=${selectedDifficulty}`);
+    // Navigate to difficulty selection for the chosen mode
+    setLocation(`/difficulty-selection?mode=${mode}`);
   };
 
   const navigateToAnalytics = (view: string) => {
@@ -208,11 +204,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Difficulty Selection */}
-          <DifficultySelector
-            selectedDifficulty={selectedDifficulty}
-            onSelect={setSelectedDifficulty}
-          />
+
         </div>
 
         {/* Right Sidebar */}
@@ -324,16 +316,16 @@ export default function Dashboard() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button 
             className="bg-white text-primary hover:bg-gray-50" 
-            onClick={() => selectedDifficulty && startStudyMode("quiz")}
+            onClick={() => startStudyMode("quiz")}
           >
-            Resume Last Session
+            Start Quick Quiz
           </Button>
           <Button 
             variant="outline" 
             className="border-white text-white hover:bg-white/10"
-            onClick={() => selectedDifficulty && startStudyMode("quiz")}
+            onClick={() => startStudyMode("dynamic-quiz")}
           >
-            Start New Challenge
+            Try Smart Quiz
           </Button>
         </div>
       </div>

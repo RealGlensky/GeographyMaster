@@ -9,6 +9,7 @@ import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import Quiz from "@/pages/quiz";
 import DynamicQuiz from "@/pages/dynamic-quiz";
+import DifficultySelection from "@/pages/difficulty-selection";
 import Flashcards from "@/pages/flashcards";
 import TypingPractice from "@/pages/typing-practice";
 import MapChallenge from "@/pages/map-challenge";
@@ -30,6 +31,7 @@ function Router() {
       ) : (
         <>
           <Route path="/" component={Dashboard} />
+          <Route path="/difficulty-selection" component={DifficultySelection} />
           <Route path="/quiz" component={Quiz} />
           <Route path="/dynamic-quiz" component={DynamicQuiz} />
           <Route path="/flashcards" component={Flashcards} />
