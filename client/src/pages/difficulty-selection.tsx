@@ -48,28 +48,48 @@ const difficultyLevels = [
   {
     level: "beginner" as Difficulty,
     title: "Beginner",
-    description: "~50 major countries and well-known capitals",
-    countries: "50 countries",
+    description: "Most famous countries and capitals",
+    countries: "27 countries",
     badge: "Perfect for starting out",
     badgeColor: "bg-green-100 text-green-600",
     icon: Globe,
     iconColor: "text-green-600"
   },
   {
+    level: "easy" as Difficulty,
+    title: "Easy", 
+    description: "Well-known countries worldwide",
+    countries: "36 countries",
+    badge: "Building confidence",
+    badgeColor: "bg-blue-100 text-blue-600",
+    icon: Star,
+    iconColor: "text-blue-600"
+  },
+  {
     level: "intermediate" as Difficulty,
-    title: "Intermediate", 
-    description: "~120 countries organized by continent",
-    countries: "120 countries",
+    title: "Intermediate",
+    description: "Regional powers and major countries",
+    countries: "51 countries",
     badge: "Great for building knowledge",
     badgeColor: "bg-yellow-100 text-yellow-600",
     icon: Star,
     iconColor: "text-yellow-600"
   },
   {
+    level: "advanced" as Difficulty,
+    title: "Advanced",
+    description: "Smaller nations and island countries", 
+    countries: "25 countries",
+    badge: "Challenging territory",
+    badgeColor: "bg-orange-100 text-orange-600",
+    icon: Zap,
+    iconColor: "text-orange-600"
+  },
+  {
     level: "expert" as Difficulty,
     title: "Expert",
-    description: "All 195 countries worldwide",
-    countries: "195 countries",
+    description: "Most challenging and obscure countries", 
+    countries: "87 countries",
     badge: "Ultimate challenge",
     badgeColor: "bg-red-100 text-red-600",
     icon: Zap,
@@ -131,7 +151,7 @@ export default function DifficultySelection() {
         <div className="mb-8">
           <h2 className="text-2xl font-semibold text-gray-900 mb-6">Choose Your Difficulty Level</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
             {difficultyLevels.map((difficulty) => {
               const DifficultyIcon = difficulty.icon;
               const isSelected = selectedDifficulty === difficulty.level;
