@@ -161,16 +161,12 @@ export default function Quiz() {
                       countryCode={countries.find(c => c.name === currentQuestionData.country)?.code || ''} 
                       countryName={currentQuestionData.country || ''} 
                       size="lg"
-                      className="mx-auto mb-2 filter grayscale blur-sm opacity-50"
+                      className="mx-auto mb-2"
                     />
                   )}
                 </div>
                 <div className="flex items-center justify-center gap-2 mb-2">
-                  <h3 className={`text-2xl font-bold ${
-                    currentQuestionData?.type === "country-to-capital" 
-                      ? "text-gray-400 filter blur-sm" 
-                      : "text-gray-900"
-                  }`}>
+                  <h3 className="text-2xl font-bold text-gray-900">
                     {currentQuestionData?.type === "country-to-capital"
                       ? `What is the capital of ${currentQuestionData.country}?`
                       : `Which country has ${currentQuestionData?.capital} as its capital?`
@@ -218,9 +214,7 @@ export default function Quiz() {
                     buttonClass += " hover:border-primary hover:bg-primary/5";
                   }
 
-                  // Check if this option represents a country (for capital-to-country questions)
-                  const isCountryOption = currentQuestionData?.type === "capital-to-country";
-                  const countryData = isCountryOption ? countries.find(c => c.name === option) : null;
+
 
                   return (
                     <button
@@ -231,13 +225,6 @@ export default function Quiz() {
                       disabled={showResult || isSubmitting}
                     >
                       <div className="flex items-center space-x-3">
-                        {isCountryOption && countryData && (
-                          <CountryFlag 
-                            countryCode={countryData.code} 
-                            countryName={countryData.name} 
-                            size="sm"
-                          />
-                        )}
                         <span className={`font-medium ${showResult && isCorrect ? 'text-green-700' : showResult && isSelected && !isCorrect ? 'text-red-700' : 'text-gray-900'}`}>
                           {option}
                         </span>

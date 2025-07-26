@@ -413,15 +413,6 @@ export default function DynamicQuizPage() {
                 ) : (
                   <>
                     Which country has {currentQuestionData.capital} as its capital?
-                    <img 
-                      src={`https://flagcdn.com/w40/${currentCountry?.code.toLowerCase()}.png`}
-                      alt={`${currentQuestionData.country} flag`}
-                      className="w-8 h-6 object-cover rounded shadow-sm"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                      }}
-                    />
                   </>
                 )}
               </h2>
@@ -442,10 +433,7 @@ export default function DynamicQuizPage() {
                     }
                   }
 
-                  // Check if this is a country name option to show flag
-                  const isCountryOption = currentQuestionData.type === 'capital-to-country';
-                  const countryForFlag = isCountryOption ? 
-                    countries.find(country => country.name === option) : null;
+
 
                   return (
                     <button
@@ -456,17 +444,6 @@ export default function DynamicQuizPage() {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          {countryForFlag && (
-                            <img 
-                              src={`https://flagcdn.com/w40/${countryForFlag.code.toLowerCase()}.png`}
-                              alt={`${option} flag`}
-                              className="w-6 h-4 object-cover rounded shadow-sm"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.style.display = 'none';
-                              }}
-                            />
-                          )}
                           <span>{option}</span>
                         </div>
                         <div className="flex items-center">
