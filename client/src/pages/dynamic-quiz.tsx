@@ -351,7 +351,7 @@ export default function DynamicQuizPage() {
                   alt={`${currentCountry.name} flag`}
                   className={`w-8 h-6 object-cover rounded shadow-sm ${
                     currentQuestionData.type === 'country-to-capital' || currentQuestionData.type === 'capital-to-country'
-                      ? 'filter grayscale blur-sm opacity-50' 
+                      ? 'filter grayscale blur-md opacity-30' 
                       : ''
                   }`}
                   onError={(e) => {
@@ -362,14 +362,14 @@ export default function DynamicQuizPage() {
                 <div>
                   <h3 className={`font-semibold ${
                     currentQuestionData.type === 'country-to-capital' || currentQuestionData.type === 'capital-to-country'
-                      ? 'text-gray-400 filter blur-sm' 
+                      ? 'text-gray-500 filter blur-md' 
                       : 'text-gray-900'
                   }`}>
                     {currentCountry.name}
                   </h3>
                   <p className={`text-sm ${
                     currentQuestionData.type === 'country-to-capital' || currentQuestionData.type === 'capital-to-country'
-                      ? 'text-gray-400 filter blur-sm' 
+                      ? 'text-gray-500 filter blur-md' 
                       : 'text-gray-600'
                   }`}>
                     {currentCountry.continent}
