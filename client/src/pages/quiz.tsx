@@ -225,6 +225,13 @@ export default function Quiz() {
                       disabled={showResult || isSubmitting}
                     >
                       <div className="flex items-center space-x-3">
+                        {currentQuestionData?.type === "capital-to-country" && countries.find(c => c.name === option) && (
+                          <CountryFlag 
+                            countryCode={countries.find(c => c.name === option)?.code || ''} 
+                            countryName={option} 
+                            size="sm"
+                          />
+                        )}
                         <span className={`font-medium ${showResult && isCorrect ? 'text-green-700' : showResult && isSelected && !isCorrect ? 'text-red-700' : 'text-gray-900'}`}>
                           {option}
                         </span>

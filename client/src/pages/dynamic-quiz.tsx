@@ -444,6 +444,17 @@ export default function DynamicQuizPage() {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
+                          {currentQuestionData.type === 'capital-to-country' && countries.find(country => country.name === option) && (
+                            <img 
+                              src={`https://flagcdn.com/w40/${countries.find(country => country.name === option)?.code.toLowerCase()}.png`}
+                              alt={`${option} flag`}
+                              className="w-6 h-4 object-cover rounded shadow-sm"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                              }}
+                            />
+                          )}
                           <span>{option}</span>
                         </div>
                         <div className="flex items-center">
