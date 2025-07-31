@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertQuizSessionSchema, insertUserProgressSchema } from "@shared/schema";
+import { insertQuizSessionSchema, insertUserProgressSchema, insertUserSchema } from "@shared/schema";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import session from "express-session";
@@ -84,6 +84,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate required fields
       if (!username || !email || !password || !firstName || !lastName) {
         return res.status(400).json({ message: "All fields are required" });
+      }
+
+      // Validate password strength
+      try {
+        insertUserSchema.pick({ password: true }).parse({ password });
+      } catch (passwordError: any) {
+        return res.status(400).json({ 
+          message: "Password requirements not met", 
+          errors: passwordError.errors?.map((e: any) => e.message) || ["Invalid password format"]
+        });
       }
 
       // Check if user already exists
