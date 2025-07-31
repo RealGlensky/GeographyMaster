@@ -6,6 +6,7 @@ import { insertQuizSessionSchema, insertUserProgressSchema } from "@shared/schem
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import session from "express-session";
+import connectPg from "connect-pg-simple";
 
 // Helper function to get authenticated user ID from session
 function getAuthenticatedUserId(req: any): string {
@@ -13,8 +14,18 @@ function getAuthenticatedUserId(req: any): string {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Add session middleware
+  // Setup persistent session storage with PostgreSQL
+  const pgStore = connectPg(session);
+  const sessionStore = new pgStore({
+    conString: process.env.DATABASE_URL,
+    createTableIfMissing: true,
+    ttl: 7 * 24 * 60 * 60, // 7 days in seconds
+    tableName: "sessions",
+  });
+
+  // Add session middleware with persistent storage
   app.use(session({
+    store: sessionStore,
     secret: process.env.SESSION_SECRET || 'development-secret-key',
     resave: false,
     saveUninitialized: false,
