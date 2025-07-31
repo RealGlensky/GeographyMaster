@@ -7,6 +7,11 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 import session from "express-session";
 
+// Helper function to get authenticated user ID from session
+function getAuthenticatedUserId(req: any): string {
+  return req.session?.userId || "demo-user-1";
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Add session middleware
   app.use(session({
@@ -143,7 +148,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user statistics
   app.get("/api/user/stats", async (req: any, res) => {
     try {
-      const userId = "demo-user-1";
+      const userId = getAuthenticatedUserId(req);
       const stats = await storage.getUserStats(userId);
       res.json(stats);
     } catch (error) {
@@ -154,7 +159,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user progress
   app.get("/api/user/progress", async (req: any, res) => {
     try {
-      const userId = "demo-user-1";
+      const userId = getAuthenticatedUserId(req);
       const progress = await storage.getUserProgress(userId);
       res.json(progress);
     } catch (error) {
@@ -165,7 +170,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get review items
   app.get("/api/user/review", async (req: any, res) => {
     try {
-      const userId = "demo-user-1";
+      const userId = getAuthenticatedUserId(req);
       const reviewItems = await storage.getReviewItems(userId);
       res.json(reviewItems);
     } catch (error) {
@@ -176,7 +181,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user achievements
   app.get("/api/user/achievements", async (req: any, res) => {
     try {
-      const userId = "demo-user-1";
+      const userId = getAuthenticatedUserId(req);
       const achievements = await storage.getUserAchievements(userId);
       res.json(achievements);
     } catch (error) {
@@ -187,7 +192,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get detailed mastery data for dashboard
   app.get("/api/user/mastery-details", async (req: any, res) => {
     try {
-      const userId = "demo-user-1";
+      const userId = getAuthenticatedUserId(req);
       const masteryDetails = await storage.getMasteryDetails(userId);
       res.json(masteryDetails);
     } catch (error) {
@@ -198,7 +203,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get streak calendar data
   app.get("/api/user/streak-calendar", async (req: any, res) => {
     try {
-      const userId = "demo-user-1";
+      const userId = getAuthenticatedUserId(req);
       const monthKey = req.query.monthKey as string;
       const streakData = await storage.getStreakCalendar(userId, monthKey);
       res.json(streakData);
@@ -210,7 +215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get detailed accuracy data
   app.get("/api/user/accuracy-details", async (req: any, res) => {
     try {
-      const userId = "demo-user-1";
+      const userId = getAuthenticatedUserId(req);
       const accuracyDetails = await storage.getAccuracyDetails(userId);
       res.json(accuracyDetails);
     } catch (error) {
@@ -221,7 +226,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get study time breakdown
   app.get("/api/user/study-time-breakdown", async (req: any, res) => {
     try {
-      const userId = "demo-user-1";
+      const userId = getAuthenticatedUserId(req);
       const { period } = req.query;
       const timePeriod = period as string || 'daily';
       const timeBreakdown = await storage.getStudyTimeBreakdown(userId, timePeriod);
@@ -234,7 +239,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update excluded countries
   app.patch("/api/user/excluded-countries", async (req: any, res) => {
     try {
-      const userId = "demo-user-1";
+      const userId = getAuthenticatedUserId(req);
       const { excludedCountries } = req.body;
       if (!Array.isArray(excludedCountries) || !excludedCountries.every(code => typeof code === 'string')) {
         return res.status(400).json({ message: "excludedCountries must be an array of strings" });
@@ -249,7 +254,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create quiz session
   app.post("/api/quiz/start", async (req: any, res) => {
     try {
-      const userId = "demo-user-1";
+      const userId = getAuthenticatedUserId(req);
       const data = insertQuizSessionSchema.parse({
         ...req.body,
         userId,
@@ -278,7 +283,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Submit quiz answer
   app.post("/api/quiz/:sessionId/answer", async (req: any, res) => {
     try {
-      const userId = "demo-user-1";
+      const userId = getAuthenticatedUserId(req);
       const sessionId = parseInt(req.params.sessionId);
       const { questionId, answer, responseTime, countryCode: cc, correct } = req.body;
       
@@ -322,7 +327,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get daily stats
   app.get("/api/user/daily-stats", async (req: any, res) => {
     try {
-      const userId = "demo-user-1";
+      const userId = getAuthenticatedUserId(req);
       const today = new Date().toISOString().split('T')[0];
       const stats = await storage.getDailyStats(userId, today);
       res.json(stats || {
@@ -339,7 +344,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Study goals routes
   app.get("/api/user/study-goals", async (req: any, res) => {
     try {
-      const userId = "demo-user-1";
+      const userId = getAuthenticatedUserId(req);
       const goals = await storage.getUserStudyGoals(userId);
       res.json(goals);
     } catch (error) {
@@ -349,7 +354,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/user/study-goals", async (req: any, res) => {
     try {
-      const userId = "demo-user-1";
+      const userId = getAuthenticatedUserId(req);
       const { period, targetMinutes } = req.body;
       const goal = await storage.setStudyGoal({
         userId,
@@ -387,7 +392,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Dynamic difficulty routes
   app.get("/api/user/recommended-countries", async (req: any, res) => {
     try {
-      const userId = "demo-user-1";
+      const userId = getAuthenticatedUserId(req);
       const difficultyLevel = (req.query.level || 'adaptive') as any;
       const count = parseInt(req.query.count as string) || 10;
       
@@ -400,7 +405,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/user/update-progress-metrics", async (req: any, res) => {
     try {
-      const userId = "demo-user-1";
+      const userId = getAuthenticatedUserId(req);
       const { countryCode, isCorrect, responseTime, updates } = req.body;
       
       if (updates) {
@@ -418,7 +423,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/user/difficulty-recommendation", async (req: any, res) => {
     try {
-      const userId = "demo-user-1";
+      const userId = getAuthenticatedUserId(req);
       const recommendation = await storage.getDifficultyRecommendation(userId);
       res.json(recommendation);
     } catch (error) {
@@ -428,7 +433,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/user/difficulty-recommendation", async (req: any, res) => {
     try {
-      const userId = "demo-user-1";
+      const userId = getAuthenticatedUserId(req);
       const recommendation = await storage.updateDifficultyRecommendation(userId, req.body);
       res.json(recommendation);
     } catch (error) {
