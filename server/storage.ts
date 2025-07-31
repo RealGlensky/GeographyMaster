@@ -260,6 +260,14 @@ export class DatabaseStorage implements IStorage {
     return quizSession;
   }
 
+  async getQuizSession(sessionId: number): Promise<QuizSession | undefined> {
+    const [session] = await db
+      .select()
+      .from(quizSessions)
+      .where(eq(quizSessions.id, sessionId));
+    return session;
+  }
+
   async updateQuizSession(sessionId: number, updates: Partial<QuizSession>): Promise<void> {
     await db
       .update(quizSessions)
@@ -330,15 +338,15 @@ export class DatabaseStorage implements IStorage {
   }> {
     const user = await this.getUser(userId);
     const progress = await this.getUserProgress(userId);
-    const sessions = await this.getUserQuizSessions(userId);
     
     const totalCountriesMastered = progress.filter(p => 
       (p.masteryLevel || 0) >= 85 && (p.totalAttempts || 0) >= 3
     ).length;
     
-    const totalQuestions = sessions.reduce((sum, s) => sum + (s.questionsAsked || 0), 0);
-    const totalCorrect = sessions.reduce((sum, s) => sum + (s.questionsCorrect || 0), 0);
-    const accuracyRate = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+    // Calculate accuracy from user progress data instead of quiz sessions
+    const totalAttempts = progress.reduce((sum, p) => sum + (p.totalAttempts || 0), 0);
+    const totalCorrect = progress.reduce((sum, p) => sum + (p.correctAnswers || 0), 0);
+    const accuracyRate = totalAttempts > 0 ? Math.round((totalCorrect / totalAttempts) * 100) : 0;
     
     return {
       totalCountriesMastered,

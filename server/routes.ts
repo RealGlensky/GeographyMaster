@@ -319,6 +319,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.updateProgress(userId, countryCode, isCorrect);
       }
       
+      // Update quiz session stats
+      const session = await storage.getQuizSession(sessionId);
+      if (session) {
+        await storage.updateQuizSession(sessionId, {
+          questionsAsked: (session.questionsAsked || 0) + 1,
+          questionsCorrect: (session.questionsCorrect || 0) + (isCorrect ? 1 : 0),
+        });
+      }
+      
       // Update daily stats
       const today = new Date().toISOString().split('T')[0];
       const currentStats = await storage.getDailyStats(userId, today);
