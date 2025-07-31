@@ -39,6 +39,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Temporarily disable Replit authentication for development
   // await setupAuth(app);
 
+  // Add logout endpoint for session-based auth
+  app.get('/api/logout', (req: any, res) => {
+    req.session.destroy((err: any) => {
+      if (err) {
+        console.error('Session destruction error:', err);
+        return res.status(500).json({ message: "Failed to logout" });
+      }
+      res.clearCookie('connect.sid'); // Clear the session cookie
+      res.redirect('/login'); // Redirect to login page
+    });
+  });
+
   // Demo user for development - create if doesn't exist
   const ensureDemoUser = async () => {
     const demoUserId = "demo-user-1";
@@ -471,20 +483,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Logout route
-  app.get("/api/logout", async (req: any, res) => {
-    if (req.session) {
-      req.session.destroy((err: any) => {
-        if (err) {
-          console.error("Error destroying session:", err);
-        }
-        res.clearCookie('connect.sid'); // Clear session cookie
-        res.redirect("/");
-      });
-    } else {
-      res.redirect("/");
-    }
-  });
+  // (Logout route moved up to avoid duplicate)
 
   const httpServer = createServer(app);
   return httpServer;
