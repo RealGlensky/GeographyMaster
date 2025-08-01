@@ -268,6 +268,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get current user info (for profile page)
+  app.get('/api/user', async (req: any, res) => {
+    try {
+      const userId = getAuthenticatedUserId(req);
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Return user without password
+      const { password: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Get user error:", error);
+      res.status(500).json({ message: "Failed to get user" });
+    }
+  });
+
   // Get user statistics
   app.get("/api/user/stats", async (req: any, res) => {
     try {
