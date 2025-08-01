@@ -23,7 +23,11 @@ export default function TypingPractice() {
   const [urlParams] = useState(() => new URLSearchParams(window.location.search));
   const difficulty = (urlParams.get("difficulty") || "beginner") as Difficulty;
   
-  const [countries] = useState(() => getCountriesByDifficulty(difficulty));
+  const [countries] = useState(() => {
+    const countryList = getCountriesByDifficulty(difficulty);
+    // Shuffle countries to get random selection each time
+    return countryList.sort(() => Math.random() - 0.5);
+  });
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [questions] = useState<TypingQuestion[]>(() => {
     return countries.slice(0, 10).map(country => {
@@ -198,9 +202,9 @@ export default function TypingPractice() {
                   {currentQuestionData.prompt}
                 </h2>
                 <PronunciationButton 
-                  text={currentQuestionData.type === "country-to-capital" 
+                  text={currentQuestionData.type === "country" 
                     ? currentQuestionData.country.name || ''
-                    : currentQuestionData.expectedAnswer || ''
+                    : currentQuestionData.country.capital || ''
                   }
                   size="sm"
                 />
