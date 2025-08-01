@@ -250,13 +250,41 @@ export default function Profile() {
           </div>
         </div>
 
+        {/* Account Summary */}
+        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
+                <User className="w-8 h-8 text-white" />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {user?.firstName && user?.lastName 
+                    ? `${user.firstName} ${user.lastName}` 
+                    : user?.username || "User"}
+                </h2>
+                <p className="text-gray-600 text-lg">{user?.email}</p>
+                <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                  <span>@{user?.username}</span>
+                  {user?.createdAt && (
+                    <span>• Member since {new Date(user.createdAt).getFullYear()}</span>
+                  )}
+                  {user?.id === "demo-user-1" && (
+                    <Badge variant="outline" className="text-blue-600 border-blue-600">Demo Account</Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* User Info */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Account Information
+                <Settings className="h-5 w-5" />
+                Edit Account Information
               </div>
               {!isEditingProfile && user?.id !== "demo-user-1" && (
                 <Button
@@ -271,7 +299,7 @@ export default function Profile() {
             </CardTitle>
             {user?.id === "demo-user-1" && (
               <CardDescription>
-                This is a demo account. Create your own account to edit profile information.
+                This is a demo account with sample data. Create your own account to edit profile information and track your personal progress.
               </CardDescription>
             )}
           </CardHeader>
@@ -346,22 +374,43 @@ export default function Profile() {
               <div className="space-y-4">
                 <div>
                   <Label className="text-sm font-medium text-gray-700">Username</Label>
-                  <Input value={user?.username || ""} disabled />
+                  <div className="mt-1 text-sm text-gray-900 bg-gray-50 p-3 rounded-md border">
+                    {user?.username || "Not set"}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Username cannot be changed</p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-sm font-medium text-gray-700">First Name</Label>
-                    <Input value={user?.firstName || ""} disabled />
+                    <div className="mt-1 text-sm text-gray-900 bg-gray-50 p-3 rounded-md border">
+                      {user?.firstName || "Not set"}
+                    </div>
                   </div>
                   <div>
                     <Label className="text-sm font-medium text-gray-700">Last Name</Label>
-                    <Input value={user?.lastName || ""} disabled />
+                    <div className="mt-1 text-sm text-gray-900 bg-gray-50 p-3 rounded-md border">
+                      {user?.lastName || "Not set"}
+                    </div>
                   </div>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium text-gray-700">Email</Label>
-                  <Input value={user?.email || ""} disabled />
+                  <Label className="text-sm font-medium text-gray-700">Email Address</Label>
+                  <div className="mt-1 text-sm text-gray-900 bg-gray-50 p-3 rounded-md border">
+                    {user?.email || "Not set"}
+                  </div>
                 </div>
+                {user?.createdAt && (
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">Member Since</Label>
+                    <div className="mt-1 text-sm text-gray-900 bg-gray-50 p-3 rounded-md border">
+                      {new Date(user.createdAt).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
@@ -388,7 +437,12 @@ export default function Profile() {
                 )}
               </CardTitle>
               <CardDescription>
-                Update your password to keep your account secure.
+                Update your password to keep your account secure. Your password was last updated on{" "}
+                {user?.updatedAt ? new Date(user.updatedAt).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long', 
+                  day: 'numeric'
+                }) : "unknown date"}.
               </CardDescription>
             </CardHeader>
             {isChangingPassword && (
