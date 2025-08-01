@@ -178,6 +178,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update user profile endpoint
+  app.patch('/api/user/profile', async (req: any, res) => {
+    try {
+      const userId = getAuthenticatedUserId(req);
+      
+      // Don't allow editing demo user
+      if (userId === "demo-user-1") {
+        return res.status(403).json({ message: "Cannot edit demo account" });
+      }
+
+      const { firstName, lastName, email } = req.body;
+
+      // Validate required fields
+      if (!firstName || !lastName || !email) {
+        return res.status(400).json({ message: "First name, last name, and email are required" });
+      }
+
+      // Check if email is already in use by another user
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser && existingUser.id !== userId) {
+        return res.status(400).json({ message: "Email is already in use by another account" });
+      }
+
+      // Update user profile
+      const updatedUser = await storage.updateUserProfile(userId, {
+        firstName,
+        lastName,
+        email
+      });
+
+      // Return user without password
+      const { password: _, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Profile update error:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  // Change user password endpoint
+  app.patch('/api/user/password', async (req: any, res) => {
+    try {
+      const userId = getAuthenticatedUserId(req);
+      
+      // Don't allow editing demo user
+      if (userId === "demo-user-1") {
+        return res.status(403).json({ message: "Cannot change password for demo account" });
+      }
+
+      const { currentPassword, newPassword } = req.body;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Current password and new password are required" });
+      }
+
+      // Get user with password
+      const user = await storage.getUser(userId);
+      if (!user || !user.password) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Verify current password
+      const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ message: "Current password is incorrect" });
+      }
+
+      // Validate new password strength
+      try {
+        insertUserSchema.pick({ password: true }).parse({ password: newPassword });
+      } catch (passwordError: any) {
+        return res.status(400).json({ 
+          message: "New password requirements not met", 
+          errors: passwordError.errors?.map((e: any) => e.message) || ["Invalid password format"]
+        });
+      }
+
+      // Hash new password
+      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+      // Update password
+      await storage.updateUserPassword(userId, hashedNewPassword);
+
+      res.json({ message: "Password changed successfully" });
+    } catch (error) {
+      console.error("Password change error:", error);
+      res.status(500).json({ message: "Failed to change password" });
+    }
+  });
+
   // Get user statistics
   app.get("/api/user/stats", async (req: any, res) => {
     try {

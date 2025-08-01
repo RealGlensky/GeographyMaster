@@ -21,6 +21,8 @@ export interface IStorage {
   updateUserStreak(userId: string, streak: number): Promise<void>;
   updateStudyTime(userId: string, minutes: number): Promise<void>;
   updateExcludedCountries(userId: string, excludedCountries: string[]): Promise<void>;
+  updateUserProfile(userId: string, updates: { firstName: string; lastName: string; email: string }): Promise<User>;
+  updateUserPassword(userId: string, hashedPassword: string): Promise<void>;
 
   // Progress methods
   getUserProgress(userId: string): Promise<UserProgress[]>;
@@ -152,6 +154,30 @@ export class DatabaseStorage implements IStorage {
     await db
       .update(users)
       .set({ excludedCountries })
+      .where(eq(users.id, userId));
+  }
+
+  async updateUserProfile(userId: string, updates: { firstName: string; lastName: string; email: string }): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        firstName: updates.firstName,
+        lastName: updates.lastName,
+        email: updates.email,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return updatedUser;
+  }
+
+  async updateUserPassword(userId: string, hashedPassword: string): Promise<void> {
+    await db
+      .update(users)
+      .set({
+        password: hashedPassword,
+        updatedAt: new Date()
+      })
       .where(eq(users.id, userId));
   }
 
