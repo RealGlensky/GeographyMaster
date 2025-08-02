@@ -20,12 +20,13 @@ export default function AnalyticsDashboard() {
 
   const handleViewChange = (view: string) => {
     setActiveView(view);
-    navigate(`/analytics-dashboard?view=${view}`);
+    // Update URL without navigating to a separate route
+    window.history.pushState({}, '', `/?analytics=${view}`);
   };
 
   const handleBackToDashboard = () => {
-    // Force a complete navigation reset
-    window.location.href = '/analytics-dashboard';
+    // Navigate back to main dashboard
+    window.location.href = '/';
   };
 
   const handleBackToMain = () => {
@@ -40,7 +41,7 @@ export default function AnalyticsDashboard() {
           <div className="flex items-center gap-4 mb-6">
             <Button variant="ghost" onClick={handleBackToDashboard}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Analytics
+              Back to Dashboard
             </Button>
             <div>
               <h1 className="text-3xl font-bold text-gray-900 capitalize">

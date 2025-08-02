@@ -141,7 +141,7 @@ export default function Quiz() {
                 </div>
                 <div className="text-right">
                   <p className="text-sm text-gray-600">Score</p>
-                  <p className="font-bold text-primary">{score}/{currentQuestion - 1}</p>
+                  <p className="font-bold text-primary">{score}/{Math.max(0, currentQuestion - 1)}</p>
                 </div>
               </div>
             </div>
