@@ -21,9 +21,22 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { formatStudyTime } from "@/lib/utils";
+import { countries } from "@/data/countries";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
+
+  // Helper function to get country info by code
+  const getCountryInfo = (countryCode: string) => {
+    return countries.find(country => country.code === countryCode);
+  };
+
+  // Helper function to get flag emoji from country code
+  const getCountryFlag = (countryCode: string) => {
+    return countryCode
+      .toUpperCase()
+      .replace(/./g, char => String.fromCodePoint(127397 + char.charCodeAt(0)));
+  };
 
 
   const { data: user } = useQuery({
@@ -286,17 +299,31 @@ export default function Dashboard() {
               <CardContent className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Need Review</h3>
                 <div className="space-y-3">
-                  {reviewItems.slice(0, 3).map((item) => (
-                    <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{item.countryCode}</p>
-                        <p className="text-xs text-gray-500">Needs practice</p>
+                  {reviewItems.slice(0, 3).map((item: any) => {
+                    const countryInfo = getCountryInfo(item.countryCode);
+                    const flag = getCountryFlag(item.countryCode);
+                    
+                    return (
+                      <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-2xl" role="img" aria-label={`${countryInfo?.name || item.countryCode} flag`}>
+                            {flag}
+                          </span>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">
+                              {countryInfo?.name || item.countryCode}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              Capital: {countryInfo?.capital || 'Unknown'}
+                            </p>
+                          </div>
+                        </div>
+                        <Button size="sm" variant="outline">
+                          Review
+                        </Button>
                       </div>
-                      <Button size="sm" variant="outline">
-                        Review
-                      </Button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 {reviewItems.length > 3 && (
                   <Button variant="ghost" className="w-full mt-4" size="sm">
