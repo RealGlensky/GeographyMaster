@@ -271,7 +271,7 @@ export default function Dashboard() {
                 </Button>
               </div>
               <div className="relative">
-                <div className="w-full h-40 rounded-lg overflow-hidden">
+                <div className="w-full h-48 rounded-lg overflow-hidden">
                   <WorldMapPreview className="w-full h-full" />
                 </div>
               </div>
