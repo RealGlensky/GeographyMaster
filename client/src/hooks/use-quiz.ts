@@ -118,11 +118,18 @@ export function useQuiz({ mode, difficulty, questionCount = 10, timePerQuestion 
       return { isCorrect };
     },
     onSuccess: ({ isCorrect }) => {
-      setQuizState(prev => ({
-        ...prev,
-        score: isCorrect ? prev.score + 1 : prev.score,
-        showResult: true,
-      }));
+      setQuizState(prev => {
+        const nextQuestionIndex = prev.currentQuestion;
+        const isLastQuestion = nextQuestionIndex >= prev.totalQuestions;
+        
+        return {
+          ...prev,
+          score: isCorrect ? prev.score + 1 : prev.score,
+          showResult: true,
+          // Immediately update question count to keep it in sync with score
+          currentQuestion: isLastQuestion ? prev.currentQuestion : nextQuestionIndex + 1,
+        };
+      });
 
       // Auto-advance after showing result
       setTimeout(() => {
@@ -177,8 +184,8 @@ export function useQuiz({ mode, difficulty, questionCount = 10, timePerQuestion 
 
   const nextQuestion = useCallback(() => {
     setQuizState(prev => {
-      const nextQuestionIndex = prev.currentQuestion;
-      const isLastQuestion = nextQuestionIndex >= prev.totalQuestions;
+      const nextQuestionIndex = prev.currentQuestion - 1; // Adjust since currentQuestion is already incremented
+      const isLastQuestion = prev.currentQuestion >= prev.totalQuestions;
       
       if (isLastQuestion) {
         // Complete the quiz
@@ -201,8 +208,7 @@ export function useQuiz({ mode, difficulty, questionCount = 10, timePerQuestion 
       
       return {
         ...prev,
-        currentQuestion: nextQuestionIndex + 1,
-        currentQuestionData: prev.questions[nextQuestionIndex] || null,
+        currentQuestionData: prev.questions[nextQuestionIndex + 1] || null,
         timeRemaining: timePerQuestion,
         selectedAnswer: null,
         showResult: false,
