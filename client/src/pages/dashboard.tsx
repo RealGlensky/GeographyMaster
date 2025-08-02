@@ -51,12 +51,10 @@ export default function Dashboard() {
     setLocation(`/difficulty-selection?mode=${mode}`);
   };
 
+  // Analytics cards are now display-only (no navigation)
   const navigateToAnalytics = (view: string) => {
-    // Keep analytics on the same dashboard page - scroll to analytics section
-    const element = document.getElementById(`analytics-${view}`);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
+    // No longer navigate away - keep everything on the dashboard
+    console.log(`Analytics ${view} clicked - stats shown above`);
   };
 
   const progressPercentage = ((dailyStats?.countriesLearned || 0) / 5) * 100;
@@ -73,7 +71,6 @@ export default function Dashboard() {
             subtitle="of 195 total"
             icon={CheckCircle}
             iconColor="text-secondary"
-            onClick={() => navigateToAnalytics('mastery')}
           />
           
           <ProgressCard
@@ -83,7 +80,6 @@ export default function Dashboard() {
             icon={Flame}
             iconColor="text-accent"
             valueColor="text-accent"
-            onClick={() => navigateToAnalytics('streak')}
           />
           
           <ProgressCard
@@ -93,7 +89,6 @@ export default function Dashboard() {
             icon={BarChart3}
             iconColor="text-primary"
             valueColor="text-primary"
-            onClick={() => navigateToAnalytics('accuracy')}
           />
           
           <ProgressCard
@@ -102,7 +97,6 @@ export default function Dashboard() {
             subtitle="this month"
             icon={Clock}
             iconColor="text-purple-600"
-            onClick={() => navigateToAnalytics('study-time')}
           />
         </div>
       </div>
