@@ -592,6 +592,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Password reset routes
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      const user = await storage.getUserByEmail(email);
+      
+      // For security, always return success even if user doesn't exist
+      if (!user) {
+        return res.json({ message: "If an account with this email exists, a reset link has been sent." });
+      }
+
+      // Generate secure reset token
+      const crypto = await import('crypto');
+      const token = crypto.randomBytes(32).toString('hex');
+
+      // Store reset token
+      await storage.createPasswordReset(user.id, token);
+
+      // In a real app, you would send an email here
+      // For demo purposes, we'll log the reset link
+      console.log(`Password reset link for ${email}: http://localhost:5000/reset-password?token=${token}`);
+      
+      res.json({ message: "If an account with this email exists, a reset link has been sent." });
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      res.status(500).json({ message: "Failed to process password reset request" });
+    }
+  });
+
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const { token, password } = req.body;
+
+      if (!token || !password) {
+        return res.status(400).json({ message: "Token and password are required" });
+      }
+
+      // Validate password strength
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\?]).{8,}$/;
+      if (!passwordRegex.test(password)) {
+        return res.status(400).json({ 
+          message: "Password must be at least 8 characters and contain uppercase, lowercase, number, and special character" 
+        });
+      }
+
+      // Get and validate reset token
+      const resetData = await storage.getPasswordReset(token);
+      if (!resetData) {
+        return res.status(400).json({ message: "Invalid or expired reset token" });
+      }
+
+      // Hash new password
+      const bcrypt = await import('bcryptjs');
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Update user password
+      await storage.updateUserPassword(resetData.userId, hashedPassword);
+
+      // Mark token as used
+      await storage.markPasswordResetUsed(token);
+
+      res.json({ message: "Password has been reset successfully" });
+    } catch (error) {
+      console.error("Reset password error:", error);
+      res.status(500).json({ message: "Failed to reset password" });
+    }
+  });
+
+  // Cleanup expired tokens periodically (you might want to run this as a cron job)
+  setInterval(async () => {
+    try {
+      await storage.cleanupExpiredPasswordResets();
+    } catch (error) {
+      console.error("Failed to cleanup expired password resets:", error);
+    }
+  }, 60 * 60 * 1000); // Run every hour
+
   // (Logout route moved up to avoid duplicate)
 
   const httpServer = createServer(app);

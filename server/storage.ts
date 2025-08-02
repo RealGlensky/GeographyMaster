@@ -1,5 +1,5 @@
 import { 
-  users, userProgress, quizSessions, achievements, dailyStats, studyGoals, difficultyRecommendations,
+  users, userProgress, quizSessions, achievements, dailyStats, studyGoals, difficultyRecommendations, passwordResets,
   type User, type InsertUser, type UpsertUser, type UserProgress, type InsertUserProgress,
   type QuizSession, type InsertQuizSession, type Achievement, type InsertAchievement,
   type DailyStats, type InsertDailyStats, type StudyGoal, type InsertStudyGoal,
@@ -23,6 +23,12 @@ export interface IStorage {
   updateExcludedCountries(userId: string, excludedCountries: string[]): Promise<void>;
   updateUserProfile(userId: string, updates: { firstName: string; lastName: string; email: string }): Promise<User>;
   updateUserPassword(userId: string, hashedPassword: string): Promise<void>;
+
+  // Password reset methods
+  createPasswordReset(userId: string, token: string): Promise<void>;
+  getPasswordReset(token: string): Promise<{ userId: string; expiresAt: Date } | undefined>;
+  markPasswordResetUsed(token: string): Promise<void>;
+  cleanupExpiredPasswordResets(): Promise<void>;
 
   // Progress methods
   getUserProgress(userId: string): Promise<UserProgress[]>;
@@ -576,6 +582,57 @@ export class DatabaseStorage implements IStorage {
       .from(difficultyRecommendations)
       .where(eq(difficultyRecommendations.userId, userId));
     return recommendation;
+  }
+
+  // Password reset methods
+  async createPasswordReset(userId: string, token: string): Promise<void> {
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 1); // Token expires in 1 hour
+
+    await db.insert(passwordResets).values({
+      userId,
+      token,
+      expiresAt,
+      used: false,
+    });
+  }
+
+  async getPasswordReset(token: string): Promise<{ userId: string; expiresAt: Date } | undefined> {
+    const [reset] = await db
+      .select()
+      .from(passwordResets)
+      .where(and(
+        eq(passwordResets.token, token),
+        eq(passwordResets.used, false)
+      ));
+
+    if (!reset) return undefined;
+    
+    // Check if token has expired
+    if (reset.expiresAt < new Date()) {
+      return undefined;
+    }
+
+    return {
+      userId: reset.userId,
+      expiresAt: reset.expiresAt,
+    };
+  }
+
+  async markPasswordResetUsed(token: string): Promise<void> {
+    await db
+      .update(passwordResets)
+      .set({ used: true })
+      .where(eq(passwordResets.token, token));
+  }
+
+  async cleanupExpiredPasswordResets(): Promise<void> {
+    await db
+      .delete(passwordResets)
+      .where(or(
+        eq(passwordResets.used, true),
+        sql`${passwordResets.expiresAt} < NOW()`
+      ));
   }
 }
 

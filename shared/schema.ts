@@ -75,6 +75,15 @@ export const dailyStats = pgTable("daily_stats", {
   studyTime: integer("study_time").default(0), // in minutes
 });
 
+export const passwordResets = pgTable("password_resets", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  token: varchar("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  used: boolean("used").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const studyGoals = pgTable("study_goals", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull(),
