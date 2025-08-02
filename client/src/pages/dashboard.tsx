@@ -32,29 +32,28 @@ export default function Dashboard() {
 
   const { data: stats } = useQuery({
     queryKey: ["/api/user/stats"],
-  }) as { data?: { totalCountriesMastered?: number; accuracyRate?: number; totalStudyTime?: number; currentStreak?: number } };
+  });
 
   const { data: achievements } = useQuery({
     queryKey: ["/api/user/achievements"],
-  }) as { data?: Array<any> };
+  });
 
   const { data: dailyStats } = useQuery({
     queryKey: ["/api/user/daily-stats"],
-  }) as { data?: { countriesLearned?: number; questionsAnswered?: number; questionsCorrect?: number; studyTime?: number } };
+  });
 
   const { data: reviewItems } = useQuery({
     queryKey: ["/api/user/review"],
-  }) as { data?: Array<any> };
+  });
 
   const startStudyMode = (mode: string) => {
     // Navigate to difficulty selection for the chosen mode
     setLocation(`/difficulty-selection?mode=${mode}`);
   };
 
-  // Analytics cards are now display-only (no navigation)
   const navigateToAnalytics = (view: string) => {
-    // No longer navigate away - keep everything on the dashboard
-    console.log(`Analytics ${view} clicked - stats shown above`);
+    // Navigate to dashboard with analytics parameter
+    setLocation(`/?analytics=${view}`);
   };
 
   const progressPercentage = ((dailyStats?.countriesLearned || 0) / 5) * 100;
@@ -71,6 +70,7 @@ export default function Dashboard() {
             subtitle="of 195 total"
             icon={CheckCircle}
             iconColor="text-secondary"
+            onClick={() => navigateToAnalytics('mastery')}
           />
           
           <ProgressCard
@@ -80,6 +80,7 @@ export default function Dashboard() {
             icon={Flame}
             iconColor="text-accent"
             valueColor="text-accent"
+            onClick={() => navigateToAnalytics('streak')}
           />
           
           <ProgressCard
@@ -89,6 +90,7 @@ export default function Dashboard() {
             icon={BarChart3}
             iconColor="text-primary"
             valueColor="text-primary"
+            onClick={() => navigateToAnalytics('accuracy')}
           />
           
           <ProgressCard
@@ -97,6 +99,7 @@ export default function Dashboard() {
             subtitle="this month"
             icon={Clock}
             iconColor="text-purple-600"
+            onClick={() => navigateToAnalytics('study-time')}
           />
         </div>
       </div>
