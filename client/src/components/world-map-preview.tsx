@@ -27,6 +27,9 @@ const COUNTRY_COORDINATES: Record<string, { lat: number; lng: number }> = {
   'ES': { lat: 40.4637, lng: -3.7492 },
   'TR': { lat: 38.9637, lng: 35.2433 },
   'IR': { lat: 32.4279, lng: 53.6880 },
+  // Add countries that user has actually practiced
+  'SD': { lat: 12.8628, lng: 30.2176 }, // Sudan
+  'BT': { lat: 27.5142, lng: 90.4336 }, // Bhutan
 };
 
 export function WorldMapPreview({ className = "" }: WorldMapPreviewProps) {
@@ -41,11 +44,14 @@ export function WorldMapPreview({ className = "" }: WorldMapPreviewProps) {
 
   // Calculate mastery status for each country
   const getCountryStatus = (countryCode: string) => {
-    if (!userProgress) return 'not-started';
+    if (!userProgress || !Array.isArray(userProgress)) return 'not-started';
     
     const progress = userProgress.find((p: any) => p.countryCode === countryCode);
     if (!progress) return 'not-started';
     
+
+    
+    // Use the same criteria as the backend for mastery
     if (progress.masteryLevel >= 85 && progress.totalAttempts >= 3) return 'mastered';
     if (progress.totalAttempts > 0) return 'learning';
     return 'not-started';
@@ -138,14 +144,25 @@ export function WorldMapPreview({ className = "" }: WorldMapPreviewProps) {
 
   // Add markers for countries with progress
   useEffect(() => {
-    if (!map || !window.google || !userProgress) return;
+    if (!map || !window.google) return;
 
     // Clear existing markers
     markers.forEach(marker => marker.setMap(null));
 
+
+
     const newMarkers = Object.entries(COUNTRY_COORDINATES).map(([countryCode, coords]) => {
       const status = getCountryStatus(countryCode);
       const color = getMarkerColor(status);
+      
+      // Find the actual progress data for this country
+      const progressData = userProgress?.find((p: any) => p.countryCode === countryCode);
+      
+      // Create more detailed title with actual data
+      let title = `${countryCode} - ${status.replace('-', ' ')}`;
+      if (progressData) {
+        title += ` (Mastery: ${progressData.masteryLevel || 0}, Attempts: ${progressData.totalAttempts || 0})`;
+      }
 
       // Create a custom marker
       const marker = new window.google.maps.Marker({
@@ -157,16 +174,16 @@ export function WorldMapPreview({ className = "" }: WorldMapPreviewProps) {
           fillOpacity: 0.8,
           strokeColor: '#ffffff',
           strokeWeight: 2,
-          scale: status === 'not-started' ? 4 : 6,
+          scale: status === 'not-started' ? 4 : status === 'mastered' ? 8 : 6,
         },
-        title: `${countryCode} - ${status.replace('-', ' ')}`,
+        title: title,
       });
 
       return marker;
     });
 
     setMarkers(newMarkers);
-  }, [map, userProgress]);
+  }, [map, userProgress, getCountryStatus, getMarkerColor]);
 
   if (!isLoaded) {
     return (
