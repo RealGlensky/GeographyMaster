@@ -130,13 +130,18 @@ export function WorldMapPreview({ className = "" }: WorldMapPreviewProps) {
         }
       ],
       disableDefaultUI: true,
-      gestureHandling: 'none',
-      zoomControl: false,
+      gestureHandling: 'cooperative', // Enable dragging and scrolling
+      zoomControl: true, // Show zoom controls
       mapTypeControl: false,
       scaleControl: false,
       streetViewControl: false,
       rotateControl: false,
-      fullscreenControl: false
+      fullscreenControl: true, // Enable fullscreen for better navigation
+      draggable: true, // Explicitly enable dragging
+      scrollwheel: true, // Enable scroll wheel zoom
+      doubleClickZoom: true, // Enable double-click zoom
+      minZoom: 1, // Set minimum zoom level
+      maxZoom: 8 // Set maximum zoom level for better performance
     });
 
     setMap(googleMap);
