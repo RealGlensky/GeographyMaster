@@ -32,19 +32,19 @@ export default function Dashboard() {
 
   const { data: stats } = useQuery({
     queryKey: ["/api/user/stats"],
-  });
+  }) as { data?: { totalCountriesMastered?: number; accuracyRate?: number; totalStudyTime?: number; currentStreak?: number } };
 
   const { data: achievements } = useQuery({
     queryKey: ["/api/user/achievements"],
-  });
+  }) as { data?: Array<any> };
 
   const { data: dailyStats } = useQuery({
     queryKey: ["/api/user/daily-stats"],
-  });
+  }) as { data?: { countriesLearned?: number; questionsAnswered?: number; questionsCorrect?: number; studyTime?: number } };
 
   const { data: reviewItems } = useQuery({
     queryKey: ["/api/user/review"],
-  });
+  }) as { data?: Array<any> };
 
   const startStudyMode = (mode: string) => {
     // Navigate to difficulty selection for the chosen mode
@@ -52,7 +52,11 @@ export default function Dashboard() {
   };
 
   const navigateToAnalytics = (view: string) => {
-    setLocation(`/analytics-dashboard?view=${view}`);
+    // Keep analytics on the same dashboard page - scroll to analytics section
+    const element = document.getElementById(`analytics-${view}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   const progressPercentage = ((dailyStats?.countriesLearned || 0) / 5) * 100;
