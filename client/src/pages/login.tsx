@@ -137,22 +137,7 @@ export default function LoginPage() {
             </form>
           </Form>
 
-          <div className="mt-4 text-center">
-            <Button 
-              variant="link" 
-              className="text-sm text-gray-600 hover:text-blue-600 p-0 h-auto"
-              onClick={() => {
-                toast({
-                  title: "Forgot Password",
-                  description: "Contact support for password reset assistance.",
-                });
-              }}
-            >
-              Forgot your password?
-            </Button>
-          </div>
-
-          <div className="mt-4 text-center">
+          <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Don't have an account?{" "}
               <Link href="/register" className="text-blue-600 hover:text-blue-500 font-medium">

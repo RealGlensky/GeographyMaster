@@ -52,8 +52,7 @@ export default function Dashboard() {
   };
 
   const navigateToAnalytics = (view: string) => {
-    // Navigate to dashboard with analytics parameter
-    setLocation(`/?analytics=${view}`);
+    setLocation(`/analytics-dashboard?view=${view}`);
   };
 
   const progressPercentage = ((dailyStats?.countriesLearned || 0) / 5) * 100;
