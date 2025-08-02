@@ -22,6 +22,7 @@ import {
 import { useState } from "react";
 import { formatStudyTime } from "@/lib/utils";
 import { countries } from "@/data/countries";
+import { WorldMapPreview } from "@/components/world-map-preview";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
@@ -270,24 +271,8 @@ export default function Dashboard() {
                 </Button>
               </div>
               <div className="relative">
-                <div className="w-full h-32 bg-gradient-to-br from-blue-100 to-green-100 rounded-lg flex items-center justify-center">
-                  <MapPin className="w-8 h-8 text-gray-400" />
-                </div>
-                <div className="absolute bottom-2 left-2 right-2 flex justify-between items-center">
-                  <div className="flex space-x-2">
-                    <div className="flex items-center space-x-1">
-                      <div className="w-2 h-2 bg-secondary rounded-full"></div>
-                      <span className="text-xs text-white">Mastered</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <div className="w-2 h-2 bg-accent rounded-full"></div>
-                      <span className="text-xs text-white">Learning</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                      <span className="text-xs text-white">Not Started</span>
-                    </div>
-                  </div>
+                <div className="w-full h-40 rounded-lg overflow-hidden">
+                  <WorldMapPreview className="w-full h-full" />
                 </div>
               </div>
             </CardContent>
