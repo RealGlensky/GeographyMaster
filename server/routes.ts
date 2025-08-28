@@ -554,6 +554,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all countries for a given difficulty level (for complete randomization)
+  app.get("/api/countries/by-difficulty", async (req: any, res) => {
+    try {
+      const difficulty = req.query.difficulty as string;
+      const userId = getAuthenticatedUserId(req);
+      
+      if (!difficulty) {
+        return res.status(400).json({ message: "Difficulty parameter is required" });
+      }
+      
+      const countries = await storage.getCountriesByDifficulty(difficulty, userId);
+      res.json(countries);
+    } catch (error) {
+      console.error("Error getting countries by difficulty:", error);
+      res.status(500).json({ message: "Failed to get countries by difficulty" });
+    }
+  });
+
   app.post("/api/user/update-progress-metrics", async (req: any, res) => {
     try {
       const userId = getAuthenticatedUserId(req);

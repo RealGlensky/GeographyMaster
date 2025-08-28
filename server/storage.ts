@@ -634,6 +634,30 @@ export class DatabaseStorage implements IStorage {
         sql`${passwordResets.expiresAt} < NOW()`
       ));
   }
+
+  async getCountriesByDifficulty(difficulty: string, userId: string): Promise<CountryWithDynamicDifficulty[]> {
+    // Import countries data from the client data file
+    const { countries, getCountriesByDifficulty } = await import("../client/src/data/countries");
+    
+    // Get all countries for this difficulty level
+    const filteredCountries = getCountriesByDifficulty(difficulty as any);
+    
+    // Get user progress to add progress information
+    const userProgress = await this.getUserProgress(userId);
+    const progressMap = new Map(userProgress.map(p => [p.countryCode, p]));
+    
+    // Convert to CountryWithDynamicDifficulty format
+    return filteredCountries.map(country => {
+      const progress = progressMap.get(country.code);
+      return {
+        ...country,
+        personalDifficultyRating: 50, // Default rating
+        masteryLevel: progress?.masteryLevel || 0,
+        isRecommended: false,
+        recommendationReason: 'Available for study',
+      };
+    });
+  }
 }
 
 export const storage = new DatabaseStorage();
