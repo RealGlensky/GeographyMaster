@@ -49,21 +49,11 @@ export function useDynamicQuiz({
     queryKey: ["/api/user"],
   });
 
-  // Get countries based on difficulty level for complete randomization
-  const { data: availableCountries, isLoading: isLoadingCountries, error } = useQuery({
-    queryKey: ['/api/countries/by-difficulty', difficultyLevel],
+  // Get AI-powered recommended countries based on user progress and selected difficulty level
+  const { data: recommendedCountries, isLoading: isLoadingCountries, error } = useQuery({
+    queryKey: ['/api/user/recommended-countries', difficultyLevel],
     queryFn: async () => {
-      // Map dynamic difficulty levels to traditional difficulty levels
-      const difficultyMapping = {
-        'review': 'beginner',
-        'adaptive': 'intermediate', 
-        'challenge': 'advanced',
-        'mastery': 'expert'
-      };
-      
-      const mappedDifficulty = difficultyMapping[difficultyLevel] || 'intermediate';
-      
-      const response = await fetch(`/api/countries/by-difficulty?difficulty=${mappedDifficulty}`, {
+      const response = await fetch(`/api/user/recommended-countries?level=${difficultyLevel}&count=20`, {
         credentials: 'include'
       });
       
@@ -80,7 +70,7 @@ export function useDynamicQuiz({
   });
 
   if (error) {
-    console.error('Error fetching countries by difficulty:', error);
+    console.error('Error fetching recommended countries:', error);
   }
   
   const [quizState, setQuizState] = useState<DynamicQuizState>({
@@ -168,20 +158,17 @@ export function useDynamicQuiz({
 
   // Start quiz
   const startQuiz = useCallback(async () => {
-    if (!availableCountries || availableCountries.length === 0) {
+    if (!recommendedCountries || recommendedCountries.length === 0) {
       console.error('Cannot start quiz: No countries available for this difficulty level');
       return;
     }
 
-    // Shuffle all available countries and select random subset for questions
-    const shuffledCountries = [...availableCountries].sort(() => Math.random() - 0.5);
-    const selectedCountries = shuffledCountries.slice(0, questionCount);
-    
-    const questions = generateQuestions(selectedCountries, quizMode);
-    console.log(`Starting quiz with ${questions.length} completely randomized questions from ${availableCountries.length} available countries in ${difficultyLevel} mode (${quizMode})`);
+    // Use AI-recommended countries for questions
+    const questions = generateQuestions(recommendedCountries, quizMode);
+    console.log(`Starting quiz with ${questions.length} AI-recommended questions from ${recommendedCountries.length} countries in ${difficultyLevel} mode (${quizMode})`);
     
     if (questions.length === 0) {
-      console.error('No questions generated from available countries');
+      console.error('No questions generated from recommended countries');
       return;
     }
     
@@ -224,7 +211,7 @@ export function useDynamicQuiz({
         isComplete: false,
         selectedAnswer: null,
         showResult: false,
-        currentCountry: selectedCountries.find(c => 
+        currentCountry: recommendedCountries.find(c => 
           c.name === questions[0]?.country || c.capital === questions[0]?.capital
         ) || null,
         questionStartTime: Date.now(),
@@ -234,7 +221,7 @@ export function useDynamicQuiz({
     } catch (error) {
       console.error('Failed to start quiz session:', error);
     }
-  }, [availableCountries, generateQuestions, mode, questionCount, timePerQuestion, quizMode, difficultyLevel]);
+  }, [recommendedCountries, generateQuestions, mode, questionCount, timePerQuestion, quizMode, difficultyLevel]);
 
   // Submit answer with enhanced tracking
   const submitAnswer = useCallback(async (answer: string) => {
@@ -289,7 +276,7 @@ export function useDynamicQuiz({
       } else {
         // Next question
         const nextQuestionData = quizState.questions[nextQuestion];
-        const nextCountry = availableCountries?.find(c => 
+        const nextCountry = recommendedCountries?.find(c => 
           c.name === nextQuestionData?.country || c.capital === nextQuestionData?.capital
         );
 
@@ -305,7 +292,7 @@ export function useDynamicQuiz({
         }));
       }
     }, 2000);
-  }, [quizState, updateProgressMutation, availableCountries, timePerQuestion]);
+  }, [quizState, updateProgressMutation, recommendedCountries, timePerQuestion]);
 
   // Timer effect
   useEffect(() => {
@@ -350,10 +337,10 @@ export function useDynamicQuiz({
 
   // Clean up debugging when data loads successfully
   useEffect(() => {
-    if (availableCountries && availableCountries.length > 0) {
-      console.log(`Quiz ready: ${availableCountries.length} countries loaded for ${difficultyLevel} mode`);
+    if (recommendedCountries && recommendedCountries.length > 0) {
+      console.log(`Quiz ready: ${recommendedCountries.length} AI-recommended countries loaded for ${difficultyLevel} mode`);
     }
-  }, [availableCountries, difficultyLevel]);
+  }, [recommendedCountries, difficultyLevel]);
 
   return {
     ...quizState,
@@ -361,8 +348,8 @@ export function useDynamicQuiz({
     submitAnswer,
     resetQuiz,
     isLoadingCountries,
-    canStart: !isLoadingCountries && availableCountries && availableCountries.length > 0,
+    canStart: !isLoadingCountries && recommendedCountries && recommendedCountries.length > 0,
     difficultyLevel,
-    availableCountriesCount: availableCountries?.length || 0,
+    recommendedCountriesCount: recommendedCountries?.length || 0,
   };
 }

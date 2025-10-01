@@ -41,7 +41,7 @@ export default function DynamicQuizPage() {
     startQuiz,
     submitAnswer,
     resetQuiz,
-    isLoadingRecommendations,
+    isLoadingCountries,
     canStart,
     difficultyLevel,
     recommendedCountriesCount,
@@ -60,10 +60,10 @@ export default function DynamicQuizPage() {
 
   // Clean console debug info - only log meaningful events
   React.useEffect(() => {
-    if (!isLoadingRecommendations && canStart) {
-      console.log(`Smart Quiz ready - ${recommendedCountriesCount} countries available for ${difficultyLevel} mode`);
+    if (!isLoadingCountries && canStart) {
+      console.log(`Smart Quiz ready - ${recommendedCountriesCount} AI-recommended countries for ${difficultyLevel} mode`);
     }
-  }, [isLoadingRecommendations, canStart, recommendedCountriesCount, difficultyLevel]);
+  }, [isLoadingCountries, canStart, recommendedCountriesCount, difficultyLevel]);
 
   const handleRestart = () => {
     setHasStarted(false);
@@ -111,10 +111,10 @@ export default function DynamicQuizPage() {
 
           <div className="mt-8 text-center">
             <div className="mb-6">
-              {isLoadingRecommendations && (
+              {isLoadingCountries && (
                 <p className="text-gray-600">Analyzing your progress and preparing personalized questions...</p>
               )}
-              {!isLoadingRecommendations && canStart && (
+              {!isLoadingCountries && canStart && (
                 <div className="text-center">
                   <p className="text-green-600 font-medium mb-2">
                     Ready! {recommendedCountriesCount} countries selected for your {difficultyLevel} session.
@@ -127,7 +127,7 @@ export default function DynamicQuizPage() {
                   </div>
                 </div>
               )}
-              {!isLoadingRecommendations && !canStart && (
+              {!isLoadingCountries && !canStart && (
                 <div className="text-center">
                   <p className="text-amber-600 font-medium mb-2">
                     Limited countries available for {difficultyLevel} mode right now.
@@ -190,11 +190,11 @@ export default function DynamicQuizPage() {
 
             <Button 
               onClick={handleStart} 
-              disabled={!canStart || isLoadingRecommendations}
+              disabled={!canStart || isLoadingCountries}
               size="lg"
               className="px-8"
             >
-              {isLoadingRecommendations ? (
+              {isLoadingCountries ? (
                 <>
                   <Brain className="mr-2 h-5 w-5 animate-spin" />
                   Preparing Your Quiz...
