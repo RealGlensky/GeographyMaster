@@ -1,6 +1,6 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
@@ -19,10 +19,24 @@ import LoginPage from "@/pages/login";
 import RegisterPage from "@/pages/register";
 import ForgotPasswordPage from "@/pages/forgot-password";
 import ResetPasswordPage from "@/pages/reset-password";
+import OnboardingAssessment from "@/pages/onboarding-assessment";
 import NotFound from "@/pages/not-found";
+import type { User } from "@shared/schema";
+import { useEffect } from "react";
 
 function Router() {
   const { isAuthenticated } = useAuth();
+  const [location, setLocation] = useLocation();
+  const { data: user } = useQuery<User>({
+    queryKey: ["/api/user"],
+    enabled: isAuthenticated,
+  });
+
+  useEffect(() => {
+    if (isAuthenticated && user && !user.onboardingCompleted && location !== "/onboarding") {
+      setLocation("/onboarding");
+    }
+  }, [isAuthenticated, user, location, setLocation]);
 
   return (
     <Switch>
@@ -34,6 +48,7 @@ function Router() {
         <Route path="/" component={Landing} />
       ) : (
         <>
+          <Route path="/onboarding" component={OnboardingAssessment} />
           <Route path="/" component={Dashboard} />
           <Route path="/difficulty-selection" component={DifficultySelection} />
           <Route path="/quiz" component={Quiz} />

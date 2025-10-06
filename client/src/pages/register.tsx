@@ -7,10 +7,12 @@ import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Eye, EyeOff, Globe } from "lucide-react";
+import { countries } from "@/data/countries";
 
 const registerSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters").max(30, "Username must be less than 30 characters"),
@@ -19,6 +21,7 @@ const registerSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string().min(6, "Please confirm your password"),
+  homeCountry: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -41,6 +44,7 @@ export default function RegisterPage() {
       lastName: "",
       password: "",
       confirmPassword: "",
+      homeCountry: "",
     },
   });
 
@@ -210,6 +214,7 @@ export default function RegisterPage() {
                           placeholder="Confirm your password"
                           {...field}
                           disabled={registerMutation.isPending}
+                          data-testid="input-confirm-password"
                         />
                         <Button
                           type="button"
@@ -218,6 +223,7 @@ export default function RegisterPage() {
                           className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                           disabled={registerMutation.isPending}
+                          data-testid="button-toggle-confirm-password"
                         >
                           {showConfirmPassword ? (
                             <EyeOff className="h-4 w-4" />
@@ -232,10 +238,41 @@ export default function RegisterPage() {
                 )}
               />
 
+              <FormField
+                control={form.control}
+                name="homeCountry"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Where are you from? (Optional)</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-home-country">
+                          <SelectValue placeholder="Select your country" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {countries
+                          .sort((a, b) => a.name.localeCompare(b.name))
+                          .map((country) => (
+                            <SelectItem key={country.code} value={country.code}>
+                              {country.name}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      This helps us personalize your learning experience based on geographical familiarity
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <Button
                 type="submit"
                 className="w-full"
                 disabled={registerMutation.isPending}
+                data-testid="button-register"
               >
                 {registerMutation.isPending ? "Creating Account..." : "Create Account"}
               </Button>
