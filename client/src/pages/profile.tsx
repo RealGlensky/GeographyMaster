@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -11,9 +12,10 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, User, Globe, Filter, Edit, Eye, EyeOff, Save, X } from "lucide-react";
+import { Settings, User, Globe, Filter, Edit, Eye, EyeOff, Save, X, Brain, RefreshCw } from "lucide-react";
 import { countries } from "@/data/countries";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { User as UserType } from "@shared/schema";
@@ -45,6 +47,7 @@ type ChangePasswordData = z.infer<typeof changePasswordSchema>;
 
 export default function Profile() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [excludedCountries, setExcludedCountries] = useState<string[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
@@ -569,6 +572,94 @@ export default function Profile() {
                 </Form>
               </CardContent>
             )}
+          </Card>
+        )}
+
+        {/* Home Country & Assessment Settings */}
+        {user?.id !== "demo-user-1" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Brain className="h-5 w-5" />
+                Personalization Settings
+              </CardTitle>
+              <CardDescription>
+                Update your home country or retake the initial assessment to recalibrate your difficulty levels
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <Label>Home Country</Label>
+                  <Select
+                    value={user?.homeCountry || ""}
+                    onValueChange={async (value) => {
+                      try {
+                        await apiRequest("POST", "/api/user/set-home-country", { homeCountry: value });
+                        queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+                        toast({
+                          title: "Home country updated",
+                          description: "Your difficulty levels will be adjusted based on your new location.",
+                        });
+                      } catch (error) {
+                        toast({
+                          title: "Error",
+                          description: "Failed to update home country",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-full" data-testid="select-profile-home-country">
+                      <SelectValue placeholder="Select your country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {countries
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                        .map((country) => (
+                          <SelectItem key={country.code} value={country.code}>
+                            {country.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-gray-500 mt-2">
+                    {user?.homeCountry 
+                      ? `Current: ${countries.find(c => c.code === user.homeCountry)?.name || "Not set"}`
+                      : "Setting your home country helps personalize difficulty levels"}
+                  </p>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-3">
+                  <div>
+                    <h4 className="font-medium mb-1">Initial Assessment</h4>
+                    <p className="text-sm text-gray-600">
+                      {user?.onboardingCompleted 
+                        ? "You've completed the initial assessment. Retake it to recalibrate your difficulty levels."
+                        : "Complete the initial assessment to personalize your learning experience."}
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={async () => {
+                      try {
+                        await apiRequest("PATCH", "/api/user/profile", { onboardingCompleted: false });
+                        await queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+                        setLocation("/onboarding");
+                      } catch (error) {
+                        window.location.href = "/onboarding";
+                      }
+                    }}
+                    data-testid="button-retake-assessment"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    {user?.onboardingCompleted ? "Retake Assessment" : "Take Assessment"}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
           </Card>
         )}
 
