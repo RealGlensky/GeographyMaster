@@ -25,6 +25,8 @@ export const users = pgTable("users", {
   currentStreak: integer("current_streak").default(0),
   totalStudyTime: integer("total_study_time").default(0), // in minutes
   excludedCountries: text("excluded_countries").array().default([]), // array of country codes to exclude from practice
+  homeCountry: varchar("home_country"), // User's home country code for personalized difficulty
+  onboardingCompleted: boolean("onboarding_completed").default(false), // Whether user completed initial assessment
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

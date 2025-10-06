@@ -91,7 +91,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Registration endpoint
   app.post('/api/auth/register', async (req: any, res) => {
     try {
-      const { username, email, password, firstName, lastName } = req.body;
+      const { username, email, password, firstName, lastName, homeCountry } = req.body;
 
       // Validate required fields
       if (!username || !email || !password || !firstName || !lastName) {
@@ -127,6 +127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         firstName,
         lastName,
         profileImageUrl: null,
+        homeCountry: homeCountry || null,
       });
 
       // Log in the user
@@ -607,6 +608,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(recommendation);
     } catch (error) {
       res.status(500).json({ message: "Failed to update difficulty recommendation" });
+    }
+  });
+
+  // Onboarding routes
+  app.post("/api/user/set-home-country", async (req: any, res) => {
+    try {
+      const userId = getAuthenticatedUserId(req);
+      const { homeCountry } = req.body;
+      
+      if (!homeCountry) {
+        return res.status(400).json({ message: "Home country is required" });
+      }
+      
+      await storage.updateHomeCountry(userId, homeCountry);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to set home country" });
+    }
+  });
+
+  app.post("/api/user/complete-onboarding", async (req: any, res) => {
+    try {
+      const userId = getAuthenticatedUserId(req);
+      await storage.completeOnboarding(userId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to complete onboarding" });
+    }
+  });
+
+  app.post("/api/user/process-assessment", async (req: any, res) => {
+    try {
+      const userId = getAuthenticatedUserId(req);
+      const { assessmentResults, homeCountry } = req.body;
+      
+      if (!assessmentResults || !Array.isArray(assessmentResults)) {
+        return res.status(400).json({ message: "Invalid assessment results" });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const userHomeCountry = homeCountry || user.homeCountry;
+      
+      for (const result of assessmentResults) {
+        const { countryCode, isCorrect, responseTime } = result;
+        
+        const existing = await storage.getProgressByCountry(userId, countryCode);
+        if (!existing) {
+          await storage.updateProgress(userId, countryCode, isCorrect);
+        }
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Assessment processing error:", error);
+      res.status(500).json({ message: "Failed to process assessment" });
     }
   });
 

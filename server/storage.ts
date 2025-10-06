@@ -23,6 +23,8 @@ export interface IStorage {
   updateExcludedCountries(userId: string, excludedCountries: string[]): Promise<void>;
   updateUserProfile(userId: string, updates: { firstName: string; lastName: string; email: string }): Promise<User>;
   updateUserPassword(userId: string, hashedPassword: string): Promise<void>;
+  updateHomeCountry(userId: string, homeCountry: string): Promise<void>;
+  completeOnboarding(userId: string): Promise<void>;
 
   // Password reset methods
   createPasswordReset(userId: string, token: string): Promise<void>;
@@ -182,6 +184,26 @@ export class DatabaseStorage implements IStorage {
       .update(users)
       .set({
         password: hashedPassword,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
+  }
+
+  async updateHomeCountry(userId: string, homeCountry: string): Promise<void> {
+    await db
+      .update(users)
+      .set({
+        homeCountry,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
+  }
+
+  async completeOnboarding(userId: string): Promise<void> {
+    await db
+      .update(users)
+      .set({
+        onboardingCompleted: true,
         updatedAt: new Date()
       })
       .where(eq(users.id, userId));
