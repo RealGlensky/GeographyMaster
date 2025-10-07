@@ -104,6 +104,13 @@ export default function Profile() {
     }
   }, [user]);
 
+  // Initialize focus countries from user data
+  useEffect(() => {
+    if (user?.focusCountries) {
+      setFocusCountries(user.focusCountries);
+    }
+  }, [user]);
+
   // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (data: UpdateProfileData) => {
@@ -181,6 +188,57 @@ export default function Profile() {
     },
   });
 
+  // Mutation to update focus countries
+  const updateFocusMutation = useMutation({
+    mutationFn: async (newFocusCountries: string[]) => {
+      const response = await apiRequest("PATCH", "/api/user/focus-countries", {
+        focusCountries: newFocusCountries
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Focus mode updated",
+        description: "Selected countries will appear 5x more often in quizzes.",
+      });
+      setHasFocusChanges(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update focus mode. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation to toggle flag visibility
+  const toggleFlagsMutation = useMutation({
+    mutationFn: async (hideFlags: boolean) => {
+      const response = await apiRequest("PATCH", "/api/user/flag-visibility", {
+        hideFlags
+      });
+      return response.json();
+    },
+    onSuccess: (_, hideFlags) => {
+      toast({
+        title: hideFlags ? "Flags hidden" : "Flags visible",
+        description: hideFlags 
+          ? "Country flags will be hidden in quizzes for an extra challenge."
+          : "Country flags will be shown in quizzes.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update flag visibility. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCountryToggle = (countryCode: string) => {
     const newExcluded = excludedCountries.includes(countryCode)
       ? excludedCountries.filter(code => code !== countryCode)
@@ -204,10 +262,44 @@ export default function Profile() {
     setHasChanges(true);
   };
 
+  // Focus mode handlers
+  const handleFocusToggle = (countryCode: string) => {
+    const newFocus = focusCountries.includes(countryCode)
+      ? focusCountries.filter(code => code !== countryCode)
+      : [...focusCountries, countryCode];
+    
+    setFocusCountries(newFocus);
+    setHasFocusChanges(true);
+  };
+
+  const handleFocusSave = () => {
+    updateFocusMutation.mutate(focusCountries);
+  };
+
+  const handleFocusByContinent = (continent: string) => {
+    const continentCountries = countries.filter(c => c.continent === continent).map(c => c.code);
+    const allSelected = continentCountries.every(code => focusCountries.includes(code));
+    
+    if (allSelected) {
+      // Deselect all from continent
+      setFocusCountries(focusCountries.filter(code => !continentCountries.includes(code)));
+    } else {
+      // Select all from continent
+      setFocusCountries(Array.from(new Set([...focusCountries, ...continentCountries])));
+    }
+    setHasFocusChanges(true);
+  };
+
   // Filter countries by search term
   const filteredCountries = countries.filter(country =>
     country.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     country.capital.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Filter focus countries by search term
+  const filteredFocusCountries = countries.filter(country =>
+    country.name.toLowerCase().includes(focusSearchTerm.toLowerCase()) ||
+    country.capital.toLowerCase().includes(focusSearchTerm.toLowerCase())
   );
 
   // Group countries by difficulty
@@ -663,6 +755,129 @@ export default function Profile() {
                   </Button>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Focus Mode */}
+        {user?.id !== "demo-user-1" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-5 w-5" />
+                Focus Mode
+              </CardTitle>
+              <CardDescription>
+                Select countries to practice more frequently (5x boost in quiz appearance)
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Summary and Flag Toggle */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Target className="h-5 w-5 text-blue-600" />
+                    <div>
+                      <p className="font-medium">Focused countries</p>
+                      <p className="text-sm text-gray-600">
+                        {focusCountries.length} {focusCountries.length === 1 ? 'country' : 'countries'} selected
+                      </p>
+                    </div>
+                  </div>
+                  <Badge variant="secondary" className="text-lg px-3 py-1">
+                    {focusCountries.length}
+                  </Badge>
+                </div>
+
+                {/* Flag Visibility Toggle */}
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex-1">
+                    <Label className="text-base font-medium">Hide flags in quizzes</Label>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Extra challenge mode - test your knowledge without visual cues
+                    </p>
+                  </div>
+                  <Switch
+                    checked={user?.hideFlagsInQuiz || false}
+                    onCheckedChange={(checked) => toggleFlagsMutation.mutate(checked)}
+                    data-testid="toggle-hide-flags"
+                  />
+                </div>
+              </div>
+
+              {/* Continent Quick Select */}
+              <div className="space-y-3">
+                <Label>Quick select by continent</Label>
+                <div className="flex flex-wrap gap-2">
+                  {['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania'].map(continent => {
+                    const continentCountries = countries.filter(c => c.continent === continent);
+                    const allSelected = continentCountries.every(c => focusCountries.includes(c.code));
+                    return (
+                      <Button
+                        key={continent}
+                        variant={allSelected ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handleFocusByContinent(continent)}
+                        data-testid={`button-focus-${continent.toLowerCase().replace(' ', '-')}`}
+                      >
+                        {continent} ({continentCountries.length})
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Search and Country List */}
+              <div className="space-y-3">
+                <Input
+                  placeholder="Search countries..."
+                  value={focusSearchTerm}
+                  onChange={(e) => setFocusSearchTerm(e.target.value)}
+                  data-testid="input-focus-search"
+                />
+
+                <ScrollArea className="h-64 border rounded-md p-4">
+                  <div className="space-y-2">
+                    {filteredFocusCountries.map((country) => (
+                      <div
+                        key={country.code}
+                        className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded"
+                      >
+                        <Checkbox
+                          id={`focus-${country.code}`}
+                          checked={focusCountries.includes(country.code)}
+                          onCheckedChange={() => handleFocusToggle(country.code)}
+                          data-testid={`checkbox-focus-${country.code}`}
+                        />
+                        <label
+                          htmlFor={`focus-${country.code}`}
+                          className="flex-1 flex items-center gap-2 cursor-pointer"
+                        >
+                          <CountryFlag countryCode={country.code} countryName={country.name} size="sm" />
+                          <span className="font-medium">{country.name}</span>
+                          <span className="text-sm text-gray-500">• {country.capital}</span>
+                        </label>
+                      </div>
+                    ))}
+                    {filteredFocusCountries.length === 0 && (
+                      <p className="text-center text-gray-500 py-4">No countries found</p>
+                    )}
+                  </div>
+                </ScrollArea>
+              </div>
+
+              {/* Save Button */}
+              {hasFocusChanges && (
+                <Button
+                  onClick={handleFocusSave}
+                  disabled={updateFocusMutation.isPending}
+                  className="w-full"
+                  data-testid="button-save-focus"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {updateFocusMutation.isPending ? "Saving..." : "Save Focus Settings"}
+                </Button>
+              )}
             </CardContent>
           </Card>
         )}
