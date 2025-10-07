@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useSearch } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -17,7 +18,7 @@ import {
 import { DynamicDifficultySelector } from "@/components/dynamic-difficulty-selector";
 import { Input } from "@/components/ui/input";
 import { useDynamicQuiz } from "@/hooks/use-dynamic-quiz";
-import { DynamicDifficultyLevel } from "@shared/schema";
+import { DynamicDifficultyLevel, User } from "@shared/schema";
 import { countries } from "@/data/countries";
 import { Clock, Target, Brain, CheckCircle, XCircle, RotateCcw, ArrowLeft, Keyboard, MousePointer } from "lucide-react";
 
@@ -27,6 +28,10 @@ export default function DynamicQuizPage() {
   const [selectedQuizMode, setSelectedQuizMode] = useState<'multiple-choice' | 'typing'>('multiple-choice');
   const [hasStarted, setHasStarted] = useState(false);
   const [typingAnswer, setTypingAnswer] = useState("");
+
+  const { data: user } = useQuery<User>({
+    queryKey: ["/api/user"],
+  });
 
   const {
     currentQuestion,
@@ -346,19 +351,21 @@ export default function DynamicQuizPage() {
           <div className="bg-white rounded-lg p-4 mb-6 border">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <img 
-                  src={`https://flagcdn.com/w40/${currentCountry.code.toLowerCase()}.png`}
-                  alt={`${currentCountry.name} flag`}
-                  className={`w-8 h-6 object-cover rounded shadow-sm ${
-                    currentQuestionData.type === 'country-to-capital' || currentQuestionData.type === 'capital-to-country'
-                      ? 'filter grayscale blur-md opacity-30' 
-                      : ''
-                  }`}
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                  }}
-                />
+                {!user?.hideFlagsInQuiz && (
+                  <img 
+                    src={`https://flagcdn.com/w40/${currentCountry.code.toLowerCase()}.png`}
+                    alt={`${currentCountry.name} flag`}
+                    className={`w-8 h-6 object-cover rounded shadow-sm ${
+                      currentQuestionData.type === 'country-to-capital' || currentQuestionData.type === 'capital-to-country'
+                        ? 'filter grayscale blur-md opacity-30' 
+                        : ''
+                    }`}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
+                  />
+                )}
                 <div>
                   <h3 className={`font-semibold ${
                     currentQuestionData.type === 'country-to-capital' || currentQuestionData.type === 'capital-to-country'
@@ -399,15 +406,17 @@ export default function DynamicQuizPage() {
               <h2 className="text-2xl font-bold mb-4 flex items-center justify-center gap-3 text-gray-900">
                 {currentQuestionData.type === 'country-to-capital' ? (
                   <>
-                    <img 
-                      src={`https://flagcdn.com/w40/${currentCountry?.code.toLowerCase()}.png`}
-                      alt={`${currentQuestionData.country} flag`}
-                      className="w-8 h-6 object-cover rounded shadow-sm"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                      }}
-                    />
+                    {!user?.hideFlagsInQuiz && (
+                      <img 
+                        src={`https://flagcdn.com/w40/${currentCountry?.code.toLowerCase()}.png`}
+                        alt={`${currentQuestionData.country} flag`}
+                        className="w-8 h-6 object-cover rounded shadow-sm"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                      />
+                    )}
                     What is the capital of {currentQuestionData.country}?
                   </>
                 ) : (
@@ -444,7 +453,7 @@ export default function DynamicQuizPage() {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          {currentQuestionData.type === 'capital-to-country' && countries.find(country => country.name === option) && (
+                          {currentQuestionData.type === 'capital-to-country' && !user?.hideFlagsInQuiz && countries.find(country => country.name === option) && (
                             <img 
                               src={`https://flagcdn.com/w40/${countries.find(country => country.name === option)?.code.toLowerCase()}.png`}
                               alt={`${option} flag`}

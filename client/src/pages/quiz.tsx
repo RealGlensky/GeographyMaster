@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { X, Clock, CheckCircle, XCircle } from "lucide-react";
 import { useQuiz } from "@/hooks/use-quiz";
-import { Difficulty } from "@shared/schema";
+import { Difficulty, User } from "@shared/schema";
 import { formatTime } from "@/lib/utils";
 import { CountryFlag } from "@/components/country-flag";
 import { PronunciationButton } from "@/components/pronunciation-button";
@@ -16,6 +17,10 @@ export default function Quiz() {
   const [, setLocation] = useLocation();
   const [urlParams] = useState(() => new URLSearchParams(window.location.search));
   const difficulty = (urlParams.get("difficulty") || "beginner") as Difficulty;
+  
+  const { data: user } = useQuery<User>({
+    queryKey: ["/api/user"],
+  });
   
   const {
     currentQuestion,
@@ -156,7 +161,7 @@ export default function Quiz() {
               {/* Question */}
               <div className="text-center">
                 <div className="mb-4">
-                  {currentQuestionData?.type === "country-to-capital" && (
+                  {currentQuestionData?.type === "country-to-capital" && !user?.hideFlagsInQuiz && (
                     <CountryFlag 
                       countryCode={countries.find(c => c.name === currentQuestionData.country)?.code || ''} 
                       countryName={currentQuestionData.country || ''} 
@@ -225,7 +230,7 @@ export default function Quiz() {
                       disabled={showResult || isSubmitting}
                     >
                       <div className="flex items-center space-x-3">
-                        {currentQuestionData?.type === "capital-to-country" && countries.find(c => c.name === option) && (
+                        {currentQuestionData?.type === "capital-to-country" && !user?.hideFlagsInQuiz && countries.find(c => c.name === option) && (
                           <CountryFlag 
                             countryCode={countries.find(c => c.name === option)?.code || ''} 
                             countryName={option} 

@@ -155,12 +155,14 @@ export default function Flashcards() {
                 <CardContent className="h-80 flex flex-col items-center justify-center p-8">
                   <div className="text-center">
                     <div className="mb-4">
-                      <CountryFlag 
-                        countryCode={flashcard.country?.code || ''} 
-                        countryName={flashcard.country?.name || ''} 
-                        size="lg"
-                        className="mx-auto mb-2"
-                      />
+                      {!user?.hideFlagsInQuiz && (
+                        <CountryFlag 
+                          countryCode={flashcard.country?.code || ''} 
+                          countryName={flashcard.country?.name || ''} 
+                          size="lg"
+                          className="mx-auto mb-2"
+                        />
+                      )}
                     </div>
                     <div className="flex items-center justify-center gap-2 mb-4">
                       <h2 className="text-3xl font-bold text-gray-900">
@@ -183,12 +185,14 @@ export default function Flashcards() {
                 <CardContent className="h-80 flex flex-col items-center justify-center p-8">
                   <div className="text-center">
                     <div className="mb-4">
-                      <CountryFlag 
-                        countryCode={flashcard.country?.code || ''} 
-                        countryName={flashcard.country?.name || ''} 
-                        size="lg"
-                        className="mx-auto mb-2"
-                      />
+                      {!user?.hideFlagsInQuiz && (
+                        <CountryFlag 
+                          countryCode={flashcard.country?.code || ''} 
+                          countryName={flashcard.country?.name || ''} 
+                          size="lg"
+                          className="mx-auto mb-2"
+                        />
+                      )}
                     </div>
                     <div className="flex items-center justify-center gap-2 mb-2">
                       <h2 className="text-2xl font-bold text-gray-600">

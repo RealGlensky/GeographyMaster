@@ -801,10 +801,12 @@ export default function MapChallenge() {
                           Find: {currentQuestion.country.name}
                         </h4>
                         <div className="flex items-center justify-center space-x-2 mb-4">
-                          <CountryFlag 
-                            countryCode={currentQuestion.country.code} 
-                            countryName={currentQuestion.country.name}
-                          />
+                          {!user?.hideFlagsInQuiz && (
+                            <CountryFlag 
+                              countryCode={currentQuestion.country.code} 
+                              countryName={currentQuestion.country.name}
+                            />
+                          )}
                           <Badge variant="outline">{currentQuestion.country.continent}</Badge>
                         </div>
                         <p className="text-gray-600 mb-4">
@@ -837,10 +839,12 @@ export default function MapChallenge() {
                             </div>
                           </div>
                           <div className="flex items-center justify-center space-x-2 mb-4">
-                            <CountryFlag 
-                              countryCode={currentQuestion.country.code} 
-                              countryName={currentQuestion.country.name}
-                            />
+                            {!user?.hideFlagsInQuiz && (
+                              <CountryFlag 
+                                countryCode={currentQuestion.country.code} 
+                                countryName={currentQuestion.country.name}
+                              />
+                            )}
                             <span className="text-lg font-medium">{currentQuestion.country.name}</span>
                           </div>
                           <PronunciationButton 

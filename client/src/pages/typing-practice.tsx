@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { X, CheckCircle, XCircle, Clock } from "lucide-react";
-import { Difficulty, Country } from "@shared/schema";
+import { Difficulty, Country, User } from "@shared/schema";
 import { getCountriesByDifficulty } from "@/data/countries";
 import { isTypingCorrect, formatTime } from "@/lib/utils";
 import { CountryFlag } from "@/components/country-flag";
@@ -22,6 +23,10 @@ export default function TypingPractice() {
   const [, setLocation] = useLocation();
   const [urlParams] = useState(() => new URLSearchParams(window.location.search));
   const difficulty = (urlParams.get("difficulty") || "beginner") as Difficulty;
+  
+  const { data: user } = useQuery<User>({
+    queryKey: ["/api/user"],
+  });
   
   const [countries] = useState(() => getCountriesByDifficulty(difficulty));
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -186,21 +191,23 @@ export default function TypingPractice() {
             {/* Question */}
             <div className="text-center mb-8">
               <div className="mb-4">
-                <CountryFlag 
-                  countryCode={currentQuestionData.country.code} 
-                  countryName={currentQuestionData.country.name} 
-                  size="lg"
-                  className="mx-auto mb-2"
-                />
+                {!user?.hideFlagsInQuiz && (
+                  <CountryFlag 
+                    countryCode={currentQuestionData.country.code} 
+                    countryName={currentQuestionData.country.name} 
+                    size="lg"
+                    className="mx-auto mb-2"
+                  />
+                )}
               </div>
               <div className="flex items-center justify-center gap-2 mb-4">
                 <h2 className="text-2xl font-bold text-gray-900">
                   {currentQuestionData.prompt}
                 </h2>
                 <PronunciationButton 
-                  text={currentQuestionData.type === "country-to-capital" 
+                  text={currentQuestionData.type === "capital" 
                     ? currentQuestionData.country.name || ''
-                    : currentQuestionData.expectedAnswer || ''
+                    : currentQuestionData.answer || ''
                   }
                   size="sm"
                 />
