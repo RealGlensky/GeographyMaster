@@ -21,6 +21,9 @@ export interface IStorage {
   updateUserStreak(userId: string, streak: number): Promise<void>;
   updateStudyTime(userId: string, minutes: number): Promise<void>;
   updateExcludedCountries(userId: string, excludedCountries: string[]): Promise<void>;
+  updateRecentlySeenCountries(userId: string, countryCodes: string[]): Promise<void>;
+  updateFocusCountries(userId: string, countryCodes: string[]): Promise<void>;
+  updateFlagVisibility(userId: string, hideFlags: boolean): Promise<void>;
   updateUserProfile(userId: string, updates: { firstName: string; lastName: string; email: string }): Promise<User>;
   updateUserPassword(userId: string, hashedPassword: string): Promise<void>;
   updateHomeCountry(userId: string, homeCountry: string): Promise<void>;
@@ -162,6 +165,27 @@ export class DatabaseStorage implements IStorage {
     await db
       .update(users)
       .set({ excludedCountries })
+      .where(eq(users.id, userId));
+  }
+
+  async updateRecentlySeenCountries(userId: string, countryCodes: string[]): Promise<void> {
+    await db
+      .update(users)
+      .set({ recentlySeenCountries: countryCodes.slice(-15) })
+      .where(eq(users.id, userId));
+  }
+
+  async updateFocusCountries(userId: string, countryCodes: string[]): Promise<void> {
+    await db
+      .update(users)
+      .set({ focusCountries: countryCodes })
+      .where(eq(users.id, userId));
+  }
+
+  async updateFlagVisibility(userId: string, hideFlags: boolean): Promise<void> {
+    await db
+      .update(users)
+      .set({ hideFlagsInQuiz: hideFlags })
       .where(eq(users.id, userId));
   }
 

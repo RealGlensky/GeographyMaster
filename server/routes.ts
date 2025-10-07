@@ -290,6 +290,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update recently seen countries
+  app.post('/api/user/recently-seen', async (req: any, res) => {
+    try {
+      const userId = getAuthenticatedUserId(req);
+      const { countryCodes } = req.body;
+
+      if (!Array.isArray(countryCodes)) {
+        return res.status(400).json({ message: "countryCodes must be an array" });
+      }
+
+      await storage.updateRecentlySeenCountries(userId, countryCodes);
+      res.json({ message: "Recently seen countries updated successfully" });
+    } catch (error) {
+      console.error("Recently seen update error:", error);
+      res.status(500).json({ message: "Failed to update recently seen countries" });
+    }
+  });
+
+  // Update focus countries
+  app.patch('/api/user/focus-countries', async (req: any, res) => {
+    try {
+      const userId = getAuthenticatedUserId(req);
+      const { countryCodes } = req.body;
+
+      if (!Array.isArray(countryCodes)) {
+        return res.status(400).json({ message: "countryCodes must be an array" });
+      }
+
+      await storage.updateFocusCountries(userId, countryCodes);
+      res.json({ message: "Focus countries updated successfully" });
+    } catch (error) {
+      console.error("Focus countries update error:", error);
+      res.status(500).json({ message: "Failed to update focus countries" });
+    }
+  });
+
+  // Update flag visibility
+  app.patch('/api/user/flag-visibility', async (req: any, res) => {
+    try {
+      const userId = getAuthenticatedUserId(req);
+      const { hideFlags } = req.body;
+
+      if (typeof hideFlags !== 'boolean') {
+        return res.status(400).json({ message: "hideFlags must be a boolean" });
+      }
+
+      await storage.updateFlagVisibility(userId, hideFlags);
+      res.json({ message: "Flag visibility updated successfully" });
+    } catch (error) {
+      console.error("Flag visibility update error:", error);
+      res.status(500).json({ message: "Failed to update flag visibility" });
+    }
+  });
+
 
   // Get user statistics
   app.get("/api/user/stats", async (req: any, res) => {

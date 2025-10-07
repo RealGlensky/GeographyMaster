@@ -25,6 +25,9 @@ export const users = pgTable("users", {
   currentStreak: integer("current_streak").default(0),
   totalStudyTime: integer("total_study_time").default(0), // in minutes
   excludedCountries: text("excluded_countries").array().default([]), // array of country codes to exclude from practice
+  recentlySeenCountries: text("recently_seen_countries").array().default([]), // last 15 country codes seen in quizzes
+  focusCountries: text("focus_countries").array().default([]), // user-selected focus countries for more frequent practice
+  hideFlagsInQuiz: boolean("hide_flags_in_quiz").default(false), // flag visibility toggle for extra challenge
   homeCountry: varchar("home_country"), // User's home country code for personalized difficulty
   onboardingCompleted: boolean("onboarding_completed").default(false), // Whether user completed initial assessment
   createdAt: timestamp("created_at").defaultNow(),

@@ -88,15 +88,47 @@ export function useDynamicQuiz({
     questionStartTime: null,
   });
 
+  // Apply weighted selection based on recently seen and focus countries
+  const applyWeightedSelection = useCallback((countries: CountryWithDynamicDifficulty[]): CountryWithDynamicDifficulty[] => {
+    const recentlySeen = user?.recentlySeenCountries || [];
+    const focusCountries = user?.focusCountries || [];
+    
+    // Create weighted array
+    const weightedCountries: CountryWithDynamicDifficulty[] = [];
+    
+    for (const country of countries) {
+      const isRecentlySeen = recentlySeen.includes(country.code);
+      const isFocus = focusCountries.includes(country.code);
+      
+      if (isFocus) {
+        // Focus countries: 5x weight (5 copies)
+        for (let i = 0; i < 5; i++) {
+          weightedCountries.push(country);
+        }
+      } else if (isRecentlySeen) {
+        // Recently seen: 0.2x weight (skip 80% of the time, add 20%)
+        if (Math.random() < 0.2) {
+          weightedCountries.push(country);
+        }
+      } else {
+        // Normal countries: 1x weight (1 copy)
+        weightedCountries.push(country);
+      }
+    }
+    
+    return shuffleArray(weightedCountries);
+  }, [user]);
+
   // Generate questions from recommended countries
   const generateQuestions = useCallback((countries: CountryWithDynamicDifficulty[], quizMode: 'multiple-choice' | 'typing' = 'multiple-choice'): QuizQuestion[] => {
     if (!countries || countries.length === 0) return [];
     
-    const shuffledCountries = shuffleArray(countries).slice(0, questionCount);
+    const weightedCountries = applyWeightedSelection(countries);
+    const selectedCountries = weightedCountries.slice(0, questionCount);
     const allCapitals = countries.map(c => c.capital);
     const allCountryNames = countries.map(c => c.name);
 
-    return shuffledCountries.map((country, index) => {
+    return selectedCountries.map((country, index) => {
       const isCountryToCapital = Math.random() > 0.5;
       
       if (isCountryToCapital) {
@@ -125,7 +157,7 @@ export function useDynamicQuiz({
         };
       }
     });
-  }, [questionCount]);
+  }, [questionCount, applyWeightedSelection]);
 
   // Update progress with detailed metrics
   const updateProgressMutation = useMutation({
@@ -273,6 +305,21 @@ export function useDynamicQuiz({
             credentials: 'include'
           });
         }
+        
+        // Update recently seen countries
+        const seenCountryCodes = quizState.questions.map((q: QuizQuestion) => {
+          const country = recommendedCountries?.find(c => c.name === q.country || c.capital === q.capital);
+          return country?.code;
+        }).filter((code: string | undefined): code is string => code !== undefined);
+        
+        const currentRecentlySeen = user?.recentlySeenCountries || [];
+        const updatedRecentlySeen = [...currentRecentlySeen, ...seenCountryCodes].slice(-15);
+        
+        apiRequest("POST", "/api/user/recently-seen", {
+          countryCodes: updatedRecentlySeen
+        });
+        
+        queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       } else {
         // Next question
         const nextQuestionData = quizState.questions[nextQuestion];
@@ -292,7 +339,7 @@ export function useDynamicQuiz({
         }));
       }
     }, 2000);
-  }, [quizState, updateProgressMutation, recommendedCountries, timePerQuestion]);
+  }, [quizState, updateProgressMutation, recommendedCountries, timePerQuestion, user, queryClient, quizMode]);
 
   // Timer effect
   useEffect(() => {

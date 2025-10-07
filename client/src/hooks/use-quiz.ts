@@ -46,13 +46,45 @@ export function useQuiz({ mode, difficulty, questionCount = 10, timePerQuestion 
     showResult: false,
   });
 
+  // Apply weighted selection based on recently seen and focus countries
+  const applyWeightedSelection = useCallback((countries: Country[]): Country[] => {
+    const recentlySeen = user?.recentlySeenCountries || [];
+    const focusCountries = user?.focusCountries || [];
+    
+    // Create weighted array
+    const weightedCountries: Country[] = [];
+    
+    for (const country of countries) {
+      const isRecentlySeen = recentlySeen.includes(country.code);
+      const isFocus = focusCountries.includes(country.code);
+      
+      if (isFocus) {
+        // Focus countries: 5x weight (5 copies)
+        for (let i = 0; i < 5; i++) {
+          weightedCountries.push(country);
+        }
+      } else if (isRecentlySeen) {
+        // Recently seen: 0.2x weight (skip 80% of the time, add 20%)
+        if (Math.random() < 0.2) {
+          weightedCountries.push(country);
+        }
+      } else {
+        // Normal countries: 1x weight (1 copy)
+        weightedCountries.push(country);
+      }
+    }
+    
+    return shuffleArray(weightedCountries);
+  }, [user]);
+
   // Generate questions based on difficulty
   const generateQuestions = useCallback((countries: Country[]): QuizQuestion[] => {
-    const shuffledCountries = shuffleArray(countries).slice(0, questionCount);
+    const weightedCountries = applyWeightedSelection(countries);
+    const selectedCountries = weightedCountries.slice(0, questionCount);
     const allCapitals = countries.map(c => c.capital);
     const allCountryNames = countries.map(c => c.name);
 
-    return shuffledCountries.map((country, index) => {
+    return selectedCountries.map((country, index) => {
       const isCountryToCapital = Math.random() > 0.5;
       
       if (isCountryToCapital) {
@@ -75,7 +107,7 @@ export function useQuiz({ mode, difficulty, questionCount = 10, timePerQuestion 
         };
       }
     });
-  }, [questionCount]);
+  }, [questionCount, applyWeightedSelection]);
 
   // Start quiz mutation
   const startQuizMutation = useMutation({
@@ -196,6 +228,20 @@ export function useQuiz({ mode, difficulty, questionCount = 10, timePerQuestion 
           });
         }
         
+        // Update recently seen countries
+        const seenCountryCodes = prev.questions.map(q => {
+          const country = countries.find(c => c.name === q.country || c.capital === q.capital);
+          return country?.code;
+        }).filter((code): code is string => code !== undefined);
+        
+        const currentRecentlySeen = user?.recentlySeenCountries || [];
+        const updatedRecentlySeen = [...currentRecentlySeen, ...seenCountryCodes].slice(-15);
+        
+        apiRequest("POST", "/api/user/recently-seen", {
+          countryCodes: updatedRecentlySeen
+        });
+        
+        queryClient.invalidateQueries({ queryKey: ["/api/user"] });
         queryClient.invalidateQueries({ queryKey: ["/api/user/stats"] });
         queryClient.invalidateQueries({ queryKey: ["/api/user/progress"] });
         
@@ -214,7 +260,7 @@ export function useQuiz({ mode, difficulty, questionCount = 10, timePerQuestion 
         showResult: false,
       };
     });
-  }, [timePerQuestion, queryClient]);
+  }, [timePerQuestion, queryClient, user]);
 
   const resetQuiz = useCallback(() => {
     setQuizState({
